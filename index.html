@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>QuadY 사업화 로드맵 | TexCore Program</title>
+<script>if(location.protocol==='file:'&&!location.search){location.replace(location.pathname+'?r='+Date.now());}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -1388,6 +1389,429 @@ function KPIView({roadmap,persist}){
   );
 }
 
+/* ─── ORG VIEW ─── */
+function OrgView({roadmap}){
+  var LS_KEY='quady-org-v1';
+  var COLORS=['#0D9488','#2563EB','#7C3AED','#D97706','#BE185D','#059669','#0EA5E9','#DC2626'];
+  var DEPTS=['경영','사업','기술','마케팅','디자인','운영','기타'];
+  var DCOL={'경영':'#0D9488','사업':'#2563EB','기술':'#7C3AED','마케팅':'#D97706','디자인':'#BE185D','운영':'#059669','기타':'#0EA5E9'};
+
+  function defOrg(){
+    return{members:[
+      {id:'ceo',name:'교수',title:'CEO',dept:'경영',color:'#0D9488',parentId:null,roles:['기술전략 수립','학술기관 연계','IP 관리','투자자 관계','법인 정비']},
+      {id:'coo',name:'종훈',title:'COO',dept:'사업',color:'#2563EB',parentId:'ceo',roles:['사업화전략','교육현장 연결','BD/파트너십','고객 발견','채용 운영']},
+      {id:'cto',name:'아고라스',title:'CTO',dept:'기술',color:'#7C3AED',parentId:'ceo',roles:['MVP 개발','기술 아키텍처','AI/ML 엔지니어링','RAG 엔진 개발','기술 채용']},
+    ]};
+  }
+  function loadOrg(){
+    try{var s=localStorage.getItem(LS_KEY);if(s)return JSON.parse(s);}catch(e){}
+    return defOrg();
+  }
+
+  var[org,setOrg]=useState(loadOrg);
+  var[tab,setTab]=useState('chart');
+  var[selId,setSelId]=useState(null);
+  var[showMod,setShowMod]=useState(false);
+  var[isEdit,setIsEdit]=useState(false);
+  var[form,setForm]=useState({name:'',title:'',dept:'기술',color:'#7C3AED',parentId:null,roles:[]});
+  var[roleInp,setRoleInp]=useState('');
+
+  function saveOrg(u){setOrg(u);try{localStorage.setItem(LS_KEY,JSON.stringify(u));}catch(e){}}
+
+  var members=org&&org.members?org.members:[];
+  var sel=null;
+  for(var i=0;i<members.length;i++){if(members[i].id===selId){sel=members[i];break;}}
+  var phases=roadmap&&roadmap.phases?roadmap.phases:[];
+
+  var tStats={};
+  phases.forEach(function(ph){
+    (ph.tasks||[]).forEach(function(t){
+      var a=t.assignee||'미배정';
+      if(!tStats[a])tStats[a]={total:0,done:0,prog:0};
+      tStats[a].total++;
+      if(t.status==='completed')tStats[a].done++;
+      if(t.status==='in-progress')tStats[a].prog++;
+    });
+  });
+
+  var layout=useMemo(function(){
+    var CW=180,CH=100,GH=60,GV=80;
+    function ch(id){return members.filter(function(m){return m.parentId===id;});}
+    function lv(id){var c=ch(id);if(!c.length)return 1;return c.reduce(function(s,x){return s+lv(x.id);},0);}
+    var P={};
+    function lay(id,sx,d){
+      var l=lv(id),tw=l*CW+(l>1?(l-1)*GH:0);
+      P[id]={x:sx+Math.round((tw-CW)/2),y:d*(CH+GV)+20};
+      var c=ch(id),cx=sx;
+      c.forEach(function(x){var xl=lv(x.id);lay(x.id,cx,d+1);cx+=xl*CW+(xl>0?xl*GH:GH);});
+    }
+    var roots=members.filter(function(m){return !m.parentId;}),rx=20;
+    roots.forEach(function(r){var l=lv(r.id);lay(r.id,rx,0);rx+=l*CW+(l>0?l*GH:GH);});
+    var vals=[];Object.keys(P).forEach(function(k){vals.push(P[k]);});
+    var W=vals.length?Math.max(600,vals.reduce(function(m,p){return Math.max(m,p.x+CW);},0)+40):600;
+    var H=vals.length?vals.reduce(function(m,p){return Math.max(m,p.y+CH);},0)+60:200;
+    return{P:P,CW:CW,CH:CH,W:W,H:H};
+  },[members.length,JSON.stringify(members.map(function(m){return m.id+m.parentId;}))]);
+
+  var P=layout.P,CW=layout.CW,CH=layout.CH,W=layout.W,H=layout.H;
+
+  function openAdd(pid){setForm({name:'',title:'',dept:'기술',color:'#7C3AED',parentId:pid||null,roles:[]});setRoleInp('');setIsEdit(false);setShowMod(true);}
+  function openEdit(m){setForm({id:m.id,name:m.name,title:m.title,dept:m.dept,color:m.color,parentId:m.parentId,roles:(m.roles||[]).slice()});setRoleInp('');setIsEdit(true);setShowMod(true);}
+  function submit(){
+    if(!form.name||!form.name.trim())return;
+    var upd;
+    if(!isEdit){
+      var nm={id:'m'+Date.now(),name:form.name,title:form.title,dept:form.dept,color:form.color,parentId:form.parentId,roles:form.roles||[]};
+      upd={...org,members:members.concat([nm])};
+    }else{
+      upd={...org,members:members.map(function(m){return m.id===form.id?Object.assign({},m,form):m;})};
+    }
+    saveOrg(upd);setShowMod(false);
+  }
+  function delMem(id){
+    if(!window.confirm('삭제하시겠습니까?'))return;
+    var del={};
+    function col(mid){del[mid]=1;members.filter(function(m){return m.parentId===mid;}).forEach(function(c){col(c.id);});}
+    col(id);
+    saveOrg({...org,members:members.filter(function(m){return !del[m.id];})});
+    setSelId(null);setShowMod(false);
+  }
+  function addRole(){
+    if(!roleInp||!roleInp.trim())return;
+    setForm(function(f){return{...f,roles:(f.roles||[]).concat([roleInp.trim()])};});
+    setRoleInp('');
+  }
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',flex:1,overflow:'hidden'}} className="fade">
+      <div style={{background:'white',borderBottom:'1px solid var(--border)',flexShrink:0,display:'flex',alignItems:'center',padding:'0 16px',gap:0}}>
+        {[['chart','🏢 조직도'],['matrix','📊 업무 분포표'],['tasks','👤 담당자별 현황']].map(function(item){
+          return(
+            <button key={item[0]} onClick={function(){setTab(item[0]);}}
+              style={{padding:'11px 14px',border:'none',borderBottom:tab===item[0]?'2.5px solid var(--teal)':'2.5px solid transparent',
+                background:'none',fontSize:13,fontWeight:tab===item[0]?700:500,
+                color:tab===item[0]?'var(--teal)':'var(--text2)',cursor:'pointer',whiteSpace:'nowrap',transition:'all .18s'}}>
+              {item[1]}
+            </button>
+          );
+        })}
+        <div style={{flex:1}}/>
+        <button onClick={function(){openAdd(null);}}
+          style={{padding:'6px 14px',background:'var(--teal)',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+          + 멤버 추가
+        </button>
+      </div>
+
+      {tab==='chart'&&(
+        <div style={{flex:1,overflow:'auto',padding:20}}>
+          <div style={{position:'relative',minWidth:W,height:H,margin:'0 auto'}}>
+            <svg style={{position:'absolute',top:0,left:0,width:W,height:H,overflow:'visible',pointerEvents:'none'}}>
+              {members.filter(function(m){return m.parentId&&P[m.parentId]&&P[m.id];}).map(function(m){
+                var pp=P[m.parentId],cp=P[m.id];
+                var sx=pp.x+CW/2,sy=pp.y+CH,ex=cp.x+CW/2,ey=cp.y,my=(sy+ey)/2;
+                return(
+                  <path key={'e'+m.id} d={'M'+sx+','+sy+' C'+sx+','+my+' '+ex+','+my+' '+ex+','+ey}
+                    fill="none" stroke="#CBD5E1" strokeWidth="2.5"/>
+                );
+              })}
+            </svg>
+            {members.map(function(m){
+              var p=P[m.id];if(!p)return null;
+              var isSel=selId===m.id;
+              var st=tStats[m.name]||{total:0,done:0,prog:0};
+              var pct=st.total?Math.round(st.done/st.total*100):0;
+              return(
+                <div key={m.id} onClick={function(){setSelId(isSel?null:m.id);}}
+                  style={{position:'absolute',left:p.x,top:p.y,width:CW,height:CH,
+                    background:'white',borderRadius:13,overflow:'hidden',cursor:'pointer',
+                    border:'2px solid '+(isSel?m.color:'#E4E9F2'),
+                    boxShadow:isSel?'0 4px 18px rgba(0,0,0,.15)':'0 2px 8px rgba(0,0,0,.07)',
+                    transition:'border-color .2s'}}>
+                  <div style={{height:5,background:m.color}}/>
+                  <div style={{padding:'8px 11px'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
+                      <span style={{fontSize:9,fontWeight:800,color:m.color,letterSpacing:'.08em',textTransform:'uppercase'}}>{m.title}</span>
+                      <span style={{fontSize:9,color:'var(--muted)',background:'#F1F5F9',padding:'1px 5px',borderRadius:4}}>{m.dept}</span>
+                    </div>
+                    <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:5}}>{m.name}</div>
+                    <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:7}}>
+                      <div style={{flex:1,height:3,background:'#F1F5F9',borderRadius:2,overflow:'hidden'}}>
+                        <div style={{height:'100%',width:pct+'%',background:m.color,borderRadius:2}}/>
+                      </div>
+                      <span style={{fontSize:9,color:'var(--muted)'}}>{st.total?pct+'%':'-'}</span>
+                    </div>
+                    <div style={{display:'flex',gap:4}}>
+                      <button onClick={function(e){e.stopPropagation();openAdd(m.id);}}
+                        style={{flex:1,fontSize:10,fontWeight:700,padding:'3px 0',background:'#F0FDF9',border:'1px solid #A7F3D0',borderRadius:5,color:'var(--teal)',cursor:'pointer'}}>
+                        + 하위
+                      </button>
+                      <button onClick={function(e){e.stopPropagation();openEdit(m);}}
+                        style={{flex:1,fontSize:10,fontWeight:700,padding:'3px 0',background:'#F8FAFC',border:'1px solid var(--border)',borderRadius:5,color:'var(--text2)',cursor:'pointer'}}>
+                        편집
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {sel&&(
+            <div style={{marginTop:20,background:'white',borderRadius:13,border:'1.5px solid '+sel.color+'44',padding:18,boxShadow:'var(--shadow)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14,flexWrap:'wrap'}}>
+                <div style={{width:44,height:44,borderRadius:12,background:sel.color,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,flexShrink:0}}>
+                  {sel.name.charAt(0)}
+                </div>
+                <div>
+                  <div style={{fontSize:17,fontWeight:700,color:'var(--text)'}}>{sel.name}</div>
+                  <div style={{fontSize:12,color:sel.color,fontWeight:600}}>{sel.title} · {sel.dept}</div>
+                </div>
+                <div style={{flex:1}}/>
+                <button onClick={function(){openEdit(sel);}} style={{padding:'6px 13px',background:'white',border:'1.5px solid var(--border)',borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer',color:'var(--text2)'}}>편집</button>
+                <button onClick={function(){delMem(sel.id);}} style={{padding:'6px 13px',background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',color:'#DC2626'}}>삭제</button>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:10,fontWeight:700,color:'var(--muted)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:7}}>주요 업무</div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
+                  {(sel.roles||[]).length>0
+                    ?(sel.roles||[]).map(function(r,i){return <span key={i} style={{padding:'3px 10px',background:sel.color+'18',color:sel.color,borderRadius:16,fontSize:12,fontWeight:600}}>{r}</span>;})
+                    :<span style={{fontSize:13,color:'var(--muted)'}}>등록된 업무 없음</span>}
+                </div>
+              </div>
+              {tStats[sel.name]&&(
+                <div style={{display:'flex',gap:8}}>
+                  {[['전체',tStats[sel.name].total,'var(--text2)'],['완료',tStats[sel.name].done,'var(--teal)'],['진행중',tStats[sel.name].prog,'#2563EB']].map(function(x){
+                    return(
+                      <div key={x[0]} style={{flex:1,background:'var(--surface2)',borderRadius:9,padding:'9px 0',textAlign:'center'}}>
+                        <div style={{fontSize:20,fontWeight:700,color:x[2]}}>{x[1]}</div>
+                        <div style={{fontSize:10,color:'var(--muted)',marginTop:2}}>{x[0]}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab==='matrix'&&(
+        <div style={{flex:1,overflow:'auto',padding:20}}>
+          <div style={{background:'white',borderRadius:13,border:'1px solid var(--border)',overflow:'hidden',boxShadow:'var(--shadow)'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',minWidth:480}}>
+              <thead>
+                <tr style={{background:'var(--surface2)'}}>
+                  <th style={{padding:'12px 16px',fontSize:11,fontWeight:700,color:'var(--muted)',textAlign:'left',borderBottom:'1px solid var(--border)',minWidth:150,letterSpacing:'.05em',textTransform:'uppercase'}}>Phase</th>
+                  {members.map(function(m){
+                    return <th key={m.id} style={{padding:'11px 8px',fontSize:11,fontWeight:700,color:m.color,textAlign:'center',borderBottom:'1px solid var(--border)',minWidth:80}}>
+                      <div>{m.name}</div><div style={{fontSize:9,color:'var(--muted)',fontWeight:500}}>{m.title}</div>
+                    </th>;
+                  })}
+                  <th style={{padding:'11px 8px',fontSize:11,fontWeight:700,color:'var(--muted)',textAlign:'center',borderBottom:'1px solid var(--border)',minWidth:60}}>합계</th>
+                </tr>
+              </thead>
+              <tbody>
+                {phases.map(function(ph,pi){
+                  var pt=ph.tasks||[];
+                  var rd=pt.filter(function(t){return t.status==='completed';}).length;
+                  var pct=pt.length?Math.round(rd/pt.length*100):0;
+                  return(
+                    <tr key={ph.id} style={{borderBottom:'1px solid var(--border)',background:pi%2===0?'white':'#FAFBFD'}}>
+                      <td style={{padding:'10px 16px'}}>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{ph.icon} {ph.name}</div>
+                        <div style={{fontSize:10,color:'var(--muted)',marginTop:1}}>{ph.months}</div>
+                        <div style={{display:'flex',alignItems:'center',gap:4,marginTop:4}}>
+                          <div style={{width:60,height:3,background:'var(--border)',borderRadius:2,overflow:'hidden'}}>
+                            <div style={{height:'100%',width:pct+'%',background:'var(--teal)',borderRadius:2}}/>
+                          </div>
+                          <span style={{fontSize:9,color:'var(--muted)'}}>{pct}%</span>
+                        </div>
+                      </td>
+                      {members.map(function(m){
+                        var mt=pt.filter(function(t){return t.assignee===m.name;});
+                        var md=mt.filter(function(t){return t.status==='completed';}).length;
+                        return(
+                          <td key={m.id} style={{padding:'8px',textAlign:'center',verticalAlign:'middle'}}>
+                            {mt.length>0?(
+                              <div style={{display:'inline-flex',flexDirection:'column',alignItems:'center',gap:2}}>
+                                <div style={{width:36,height:36,borderRadius:9,background:m.color+'18',border:'1.5px solid '+m.color+'44',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:m.color}}>
+                                  {mt.length}
+                                </div>
+                                <div style={{fontSize:9,color:'var(--muted)'}}>{md}/{mt.length}</div>
+                              </div>
+                            ):<span style={{color:'#CBD5E1',fontSize:16}}>—</span>}
+                          </td>
+                        );
+                      })}
+                      <td style={{padding:'8px',textAlign:'center'}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{pt.length}</div>
+                        <div style={{fontSize:9,color:'var(--muted)'}}>{rd} 완료</div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr style={{background:'var(--surface3)',borderTop:'2px solid var(--border2)'}}>
+                  <td style={{padding:'11px 16px',fontSize:13,fontWeight:700,color:'var(--text)'}}>전체</td>
+                  {members.map(function(m){
+                    var s=tStats[m.name]||{total:0,done:0};
+                    return <td key={m.id} style={{padding:'8px',textAlign:'center'}}>
+                      <div style={{fontSize:14,fontWeight:700,color:m.color}}>{s.total}</div>
+                      <div style={{fontSize:9,color:'var(--muted)'}}>{s.done} 완료</div>
+                    </td>;
+                  })}
+                  <td style={{padding:'8px',textAlign:'center',fontSize:14,fontWeight:700,color:'var(--text)'}}>
+                    {phases.reduce(function(s,ph){return s+(ph.tasks||[]).length;},0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab==='tasks'&&(
+        <div style={{flex:1,overflow:'auto',padding:20}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(265px,1fr))',gap:14}}>
+            {members.map(function(m){
+              var st=tStats[m.name]||{total:0,done:0,prog:0};
+              var pct=st.total?Math.round(st.done/st.total*100):0;
+              var myT=[];
+              phases.forEach(function(ph){
+                (ph.tasks||[]).forEach(function(t){
+                  if(t.assignee===m.name)myT.push(Object.assign({},t,{pn:ph.name,pi:ph.icon}));
+                });
+              });
+              return(
+                <div key={m.id} style={{background:'white',borderRadius:13,border:'1px solid var(--border)',overflow:'hidden',boxShadow:'var(--shadow)'}}>
+                  <div style={{height:4,background:m.color}}/>
+                  <div style={{padding:14}}>
+                    <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:10}}>
+                      <div style={{width:40,height:40,borderRadius:10,background:m.color,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,flexShrink:0}}>
+                        {m.name.charAt(0)}
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>{m.name}</div>
+                        <div style={{fontSize:11,color:m.color,fontWeight:600}}>{m.title} · {m.dept}</div>
+                      </div>
+                      <div style={{textAlign:'right',flexShrink:0}}>
+                        <div style={{fontSize:20,fontWeight:700,color:m.color}}>{pct}%</div>
+                        <div style={{fontSize:9,color:'var(--muted)'}}>완료율</div>
+                      </div>
+                    </div>
+                    <div style={{height:5,background:'var(--surface2)',borderRadius:3,overflow:'hidden',marginBottom:9}}>
+                      <div style={{height:'100%',width:pct+'%',background:m.color,borderRadius:3}}/>
+                    </div>
+                    <div style={{display:'flex',gap:5,marginBottom:10}}>
+                      {[['전체',st.total,'var(--text2)'],['완료',st.done,'var(--teal)'],['진행중',st.prog,'#2563EB']].map(function(x){
+                        return <div key={x[0]} style={{flex:1,background:'var(--surface2)',borderRadius:7,padding:'6px 0',textAlign:'center'}}>
+                          <div style={{fontSize:15,fontWeight:700,color:x[2]}}>{x[1]}</div>
+                          <div style={{fontSize:9,color:'var(--muted)'}}>{x[0]}</div>
+                        </div>;
+                      })}
+                    </div>
+                    <div style={{maxHeight:148,overflowY:'auto'}}>
+                      {myT.length===0&&<div style={{fontSize:12,color:'var(--muted)',textAlign:'center',padding:'14px 0'}}>할당된 업무 없음</div>}
+                      {myT.map(function(t,i){
+                        var dc=t.status==='completed'?'var(--teal)':t.status==='in-progress'?'#2563EB':t.status==='blocked'?'#DC2626':'#CBD5E1';
+                        return(
+                          <div key={i} style={{display:'flex',alignItems:'flex-start',gap:7,padding:'4px 0',borderTop:'1px solid var(--border)'}}>
+                            <div style={{width:7,height:7,borderRadius:2,flexShrink:0,marginTop:4,background:dc}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:11,fontWeight:500,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.title}</div>
+                              <div style={{fontSize:9,color:'var(--muted)'}}>{t.pi} {t.pn}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {(m.roles||[]).length>0&&(
+                      <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
+                        <div style={{fontSize:9,fontWeight:700,color:'var(--muted)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:5}}>주요 역할</div>
+                        <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
+                          {(m.roles||[]).map(function(r,i){return <span key={i} style={{fontSize:10,padding:'2px 7px',background:m.color+'18',color:m.color,borderRadius:9,fontWeight:600}}>{r}</span>;})
+                          }
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {showMod&&(
+        <div onClick={function(){setShowMod(false);}}
+          style={{position:'fixed',inset:0,background:'rgba(13,20,36,.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:2000}}>
+          <div onClick={function(e){e.stopPropagation();}}
+            style={{background:'white',borderRadius:16,padding:26,width:440,maxHeight:'86vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,.2)'}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--text)',marginBottom:18}}>{isEdit?'멤버 편집':'새 멤버 추가'}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>이름 *</div>
+                <input value={form.name} onChange={function(e){setForm(function(f){return Object.assign({},f,{name:e.target.value});});}} className="inp" placeholder="홍길동"/>
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>직책</div>
+                <input value={form.title} onChange={function(e){setForm(function(f){return Object.assign({},f,{title:e.target.value});});}} className="inp" placeholder="CEO, PM..."/>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>부서</div>
+                <select value={form.dept} onChange={function(e){var c=DCOL[e.target.value]||form.color;setForm(function(f){return Object.assign({},f,{dept:e.target.value,color:c});});}} className="inp">
+                  {DEPTS.map(function(d){return <option key={d} value={d}>{d}</option>;}) }
+                </select>
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>색상</div>
+                <div style={{display:'flex',gap:5,marginTop:4,flexWrap:'wrap'}}>
+                  {COLORS.map(function(c){
+                    return <div key={c} onClick={function(){setForm(function(f){return Object.assign({},f,{color:c});});}}
+                      style={{width:24,height:24,borderRadius:6,background:c,cursor:'pointer',border:form.color===c?'2.5px solid #0D1424':'2.5px solid transparent'}}/>;
+                  })}
+                </div>
+              </div>
+            </div>
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>상위 직책</div>
+              <select value={form.parentId||''} onChange={function(e){setForm(function(f){return Object.assign({},f,{parentId:e.target.value||null});});}} className="inp">
+                <option value="">없음 (최상위)</option>
+                {members.filter(function(m){return m.id!==form.id;}).map(function(m){return <option key={m.id} value={m.id}>{m.name} ({m.title})</option>;}) }
+              </select>
+            </div>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:6}}>주요 업무</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:7}}>
+                {(form.roles||[]).map(function(r,i){
+                  return(
+                    <span key={i} style={{display:'inline-flex',alignItems:'center',gap:3,padding:'3px 8px',background:form.color+'22',color:form.color,borderRadius:11,fontSize:11,fontWeight:600}}>
+                      {r}
+                      <span onClick={function(){setForm(function(f){var rr=f.roles.filter(function(_,j){return j!==i;});return Object.assign({},f,{roles:rr});});}}
+                        style={{cursor:'pointer',opacity:.7,fontSize:13,lineHeight:1}}>x</span>
+                    </span>
+                  );
+                })}
+              </div>
+              <div style={{display:'flex',gap:6}}>
+                <input value={roleInp} onChange={function(e){setRoleInp(e.target.value);}}
+                  onKeyDown={function(e){if(e.key==='Enter'){e.preventDefault();addRole();}}}
+                  className="inp" placeholder="업무 입력 후 Enter" style={{fontSize:12}}/>
+                <button onClick={addRole} style={{padding:'8px 12px',background:'var(--teal)',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',flexShrink:0}}>추가</button>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:7,justifyContent:'flex-end'}}>
+              {isEdit&&<button onClick={function(){delMem(form.id);}} style={{padding:'8px 14px',background:'#FEF2F2',color:'#DC2626',border:'1px solid #FCA5A5',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer',marginRight:'auto'}}>삭제</button>}
+              <button onClick={function(){setShowMod(false);}} style={{padding:'8px 14px',background:'transparent',border:'1.5px solid var(--border)',borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer',color:'var(--text2)'}}>취소</button>
+              <button onClick={submit} style={{padding:'8px 16px',background:'var(--teal)',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>저장</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── MIND MAP VIEW ─── */
 function MindMapView(){
   const SKEY='quady-mindmaps-v1';
@@ -1436,7 +1860,7 @@ function MindMapView(){
     if(!parent)return;
     const siblings=activeMap.nodes.filter(n=>n.parentId===parentId);
     const si=siblings.length;
-    const nx=parent.x+(parent.parentId===null?180:150);
+    const nx=parent.x+(parent.parentId===null?220:180);
     const ny=parent.y+(si-(si>0?(si-1)/2:0))*80;
     const newNode=mkNode('새 아이디어',nx,ny,parentId,(parent.depth||0)+1);
     const updated=maps.map(m=>m.id===activeId?{...m,nodes:[...m.nodes,newNode]}:m);
@@ -1514,16 +1938,15 @@ function MindMapView(){
 
   const getColor=(d)=>PALETTE[d%PALETTE.length];
 
-  // 노드 크기 계산 (렌더링과 동일한 공식)
-  const nw=(node)=>{
-    const len=Math.min(node.text.length,18);
-    return !node.parentId?Math.max(140,len*9+28):Math.max(88,len*8+24);
-  };
-  const nh=(node)=>!node.parentId?44:36;
+  // 고정 노드 크기 (한국어 글자 폭 오차 제거)
+  const NODE_ROOT_W=180, NODE_ROOT_H=44;
+  const NODE_CHILD_W=140, NODE_CHILD_H=36;
+  const nodeW=(node)=>!node.parentId?NODE_ROOT_W:NODE_CHILD_W;
+  const nodeH=(node)=>!node.parentId?NODE_ROOT_H:NODE_CHILD_H;
 
   // 박스 엣지에서 엣지로 연결되는 베지어 곡선
   const bezier=(p,c)=>{
-    const pw=nw(p)/2, cw=nw(c)/2;
+    const pw=nodeW(p)/2, cw=nodeW(c)/2;
     const goRight=c.x>=p.x;
     const sx=p.x+(goRight?pw:-pw);
     const ex=c.x+(goRight?-cw:cw);
@@ -1609,9 +2032,10 @@ function MindMapView(){
             const isRoot=!node.parentId;
             const isSel=selId===node.id;
             const isEdit=editId===node.id;
-            const label=node.text.length>18?node.text.slice(0,17)+'…':node.text;
-            const nw=isRoot?Math.max(140,label.length*9+28):Math.max(88,label.length*8+24);
-            const nh=isRoot?44:36;
+            const maxChars=isRoot?13:10;
+            const label=node.text.length>maxChars?node.text.slice(0,maxChars-1)+'…':node.text;
+            const nw=isRoot?NODE_ROOT_W:NODE_CHILD_W;
+            const nh=isRoot?NODE_ROOT_H:NODE_CHILD_H;
             return(
               <g key={node.id} transform={`translate(${Math.round(node.x-nw/2)},${Math.round(node.y-nh/2)})`}
                 style={{cursor:'grab',userSelect:'none'}}
@@ -2540,11 +2964,12 @@ function QuadYRoadmap(){
 
   const VIEWS=[
     {k:"timeline", l:"타임라인", icon:"📅"},
-    {k:"detail",   l:"상세 보기", icon:"📋"},
+    {k:"detail",   l:"상세",     icon:"📋"},
     {k:"dashboard",l:"대시보드", icon:"📊"},
-    {k:"kpi",      l:"KPI 추적", icon:"🎯"},
+    {k:"kpi",      l:"KPI",      icon:"🎯"},
     {k:"meetings", l:"회의록",   icon:"📝"},
     {k:"mindmap",  l:"마인드맵", icon:"🧠"},
+    {k:"org",      l:"조직도",   icon:"🏢"},
   ];
 
   return(
@@ -2556,52 +2981,55 @@ function QuadYRoadmap(){
 
         {/* NAV */}
         <div style={{background:"white",borderBottom:"1px solid var(--border)",flexShrink:0,boxShadow:"0 2px 8px rgba(13,20,36,.05)"}}>
-          <div style={{padding:"0 12px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"nowrap",gap:4}}>
-              <div style={{display:"flex",alignItems:"center",gap:0,flexShrink:0}}>
-                {VIEWS.map(v=>(
-                  <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
-                    style={{padding:"10px 9px",background:view===v.k?"var(--surface3)":"none",border:"none",borderBottom:view===v.k?"2.5px solid var(--teal)":"2.5px solid transparent",cursor:"pointer",fontSize:12,fontWeight:view===v.k?700:500,color:view===v.k?"var(--teal)":"var(--text2)",transition:"all .18s",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
-                    <span style={{fontSize:13}}>{v.icon}</span>{v.l}
+          {/* 탭 행 - flexWrap으로 항상 모든 탭 표시 */}
+          <div style={{padding:"2px 4px",display:"flex",alignItems:"center",flexWrap:"wrap",borderBottom:(view==="timeline"||view==="detail"||view==="dashboard")?"1px solid var(--border)":"none"}}>
+            {VIEWS.map(v=>(
+              <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
+                style={{padding:"7px 9px",background:view===v.k?"var(--surface3)":"none",border:"none",
+                  borderBottom:view===v.k?"2.5px solid var(--teal)":"2.5px solid transparent",
+                  cursor:"pointer",fontSize:12,fontWeight:view===v.k?700:500,
+                  color:view===v.k?"var(--teal)":"var(--text2)",transition:"all .18s",
+                  whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:3}}>
+                <span style={{fontSize:13}}>{v.icon}</span>{v.l}
+              </button>
+            ))}
+          </div>
+          {/* 컨트롤 행 - 필요시만 표시 */}
+          {view==="timeline"&&(
+            <div style={{padding:"4px 12px",display:"flex",alignItems:"center",gap:6}}>
+              <div style={{display:"flex",alignItems:"center",gap:2,background:"var(--surface2)",borderRadius:8,padding:"3px",border:"1px solid var(--border)"}}>
+                {Object.entries(ZOOMS).map(([k,c])=>(
+                  <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 10px",border:"none",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:700,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .18s"}}>
+                    {c.label}
                   </button>
                 ))}
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                {view==="timeline"&&(
-                  <div style={{display:"flex",alignItems:"center",gap:2,background:"var(--surface2)",borderRadius:8,padding:"3px",border:"1px solid var(--border)"}}>
-                    {Object.entries(ZOOMS).map(([k,c])=>(
-                      <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 10px",border:"none",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:700,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .18s"}}>
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {(view==="detail"||view==="dashboard")&&(
-                  <>
-                    <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:140,fontSize:13,padding:"5px 8px"}}/>
-                    <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:110,fontSize:13,padding:"5px 8px"}}>
-                      <option value="all">상태: 모두</option>
-                      {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                    </select>
-                    <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:110,fontSize:13,padding:"5px 8px"}}>
-                      <option value="all">우선순위: 모두</option>
-                      {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                    </select>
-                  </>
-                )}
-              </div>
             </div>
-          </div>
+          )}
+          {(view==="detail"||view==="dashboard")&&(
+            <div style={{padding:"4px 12px",display:"flex",alignItems:"center",gap:6}}>
+              <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:180,fontSize:12,padding:"5px 9px"}}/>
+              <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:120,fontSize:12,padding:"5px 8px"}}>
+                <option value="all">상태: 모두</option>
+                {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+              </select>
+              <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:120,fontSize:12,padding:"5px 8px"}}>
+                <option value="all">우선순위: 모두</option>
+                {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* VIEWS */}
-        <div style={{flex:1,overflow:(view==="meetings"||view==="mindmap")?"hidden":"auto",display:"flex",flexDirection:"column"}}>
+        <div style={{flex:1,overflow:(view==="meetings"||view==="mindmap"||view==="org")?"hidden":"auto",display:"flex",flexDirection:"column"}}>
           {view==="timeline"&&<TimelineView roadmap={roadmap} zoom={zoom} onEditTask={setEditTask} onEditPhase={setEditPhase} onAddTask={addTask}/>}
           {view==="detail"&&<DetailView roadmap={roadmap} activePhase={activePhase} setActivePhase={setActivePhase} onEditTask={setEditTask} onEditPhase={setEditPhase} filterStatus={filterStatus} filterPriority={filterPriority} searchQuery={searchQuery} onAddTask={addTask} onOpenWorkspace={setWorkspaceTask} onReorderTask={reorderTask} onReorderPhase={reorderPhase}/>}
           {view==="dashboard"&&<DashboardView roadmap={roadmap} totalProg={totalProg} onEditTask={setEditTask} setView={setView} setActivePhase={setActivePhase} filterStatus={filterStatus}/>}
           {view==="kpi"&&<KPIView roadmap={roadmap} persist={persist}/>}
           {view==="meetings"&&<MeetingView roadmap={roadmap}/>}
           {view==="mindmap"&&<MindMapView/>}
+          {view==="org"&&<OrgView roadmap={roadmap}/>}
         </div>
       </div>
 

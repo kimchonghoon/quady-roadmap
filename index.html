@@ -2123,36 +2123,38 @@ function QuadYRoadmap(){
         <div style={{background:"white",borderBottom:"1px solid var(--border)",flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
           <div style={{padding:"0 12px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"nowrap",gap:4,paddingTop:4}}>
-              <div style={{display:"flex",alignItems:"center",gap:2}}>
+              <div style={{display:"flex",alignItems:"center",gap:2,flexShrink:0}}>
                 {VIEWS.map(v=>(
                   <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
-                    style={{padding:"10px 12px",background:"none",border:"none",borderBottom:view===v.k?"3px solid var(--teal)":"3px solid transparent",cursor:"pointer",fontSize:13,fontWeight:view===v.k?700:400,color:view===v.k?"var(--teal)":"var(--muted)",transition:"all .15s",whiteSpace:"nowrap"}}>
+                    style={{padding:"10px 10px",background:"none",border:"none",borderBottom:view===v.k?"3px solid var(--teal)":"3px solid transparent",cursor:"pointer",fontSize:13,fontWeight:view===v.k?700:400,color:view===v.k?"var(--teal)":"var(--muted)",transition:"all .15s",whiteSpace:"nowrap"}}>
                     {v.l}
                   </button>
                 ))}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8,paddingBottom:4,flexShrink:0}}>
                 {view==="timeline"&&(
-                  <div style={{display:"flex",alignItems:"center",gap:2,marginLeft:12,background:"var(--surface2)",borderRadius:8,padding:3}}>
+                  <div style={{display:"flex",alignItems:"center",gap:2,background:"var(--surface2)",borderRadius:8,padding:3}}>
                     {Object.entries(ZOOMS).map(([k,c])=>(
-                      <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 11px",border:"none",borderRadius:6,cursor:"pointer",fontSize:15,fontWeight:600,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .15s"}}>
+                      <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 9px",border:"none",borderRadius:6,cursor:"pointer",fontSize:13,fontWeight:600,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .15s"}}>
                         {c.label}
                       </button>
                     ))}
                   </div>
                 )}
+                {(view==="detail"||view==="dashboard")&&(
+                  <>
+                    <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:140,fontSize:13,padding:"5px 8px"}}/>
+                    <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:110,fontSize:13,padding:"5px 8px"}}>
+                      <option value="all">상태: 모두</option>
+                      {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                    <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:110,fontSize:13,padding:"5px 8px"}}>
+                      <option value="all">우선순위: 모두</option>
+                      {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                  </>
+                )}
               </div>
-              {(view==="detail"||view==="dashboard")&&(
-                <div style={{display:"flex",alignItems:"center",gap:8,paddingBottom:4}}>
-                  <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:160,fontSize:14,padding:"5px 10px"}}/>
-                  <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
-                    <option value="all">상태: 모두</option>
-                    {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                  </select>
-                  <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
-                    <option value="all">우선순위: 모두</option>
-                    {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                  </select>
-                </div>
-              )}
             </div>
           </div>
         </div>

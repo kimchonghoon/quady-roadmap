@@ -1389,9 +1389,9 @@ function KPIView({roadmap,persist}){
   );
 }
 
-/* ─── MARKETING VIEW ─── */
+/* ─── MARKETING VIEW v2 ─── */
 const MarketingView=({roadmap})=>{
-  const LS='quady-mkt-v1';
+  const LS='quady-mkt-v2';
   const CHAN_TYPES=['SNS','블로그/미디엄','이메일','유튜브','PR/언론','이벤트/박람회','파트너십','검색광고','기타'];
   const CONT_TYPES=['블로그','SNS 포스팅','영상','뉴스레터','인포그래픽','케이스스터디','기타'];
   const STATUS_CAM={planning:{l:'계획중',c:'#6B7280',bg:'#F3F4F6'},active:{l:'진행중',c:'#2563EB',bg:'#DBEAFE'},done:{l:'완료',c:'#16A34A',bg:'#DCFCE7'},paused:{l:'중단',c:'#DC2626',bg:'#FEE2E2'}};
@@ -1408,15 +1408,15 @@ const MarketingView=({roadmap})=>{
       goals:'1년 내 MAU 1,000명 · 파트너십 10개 · MRR 1,000만원'
     },
     channels:[
-      {id:'ch1',name:'Instagram',type:'SNS',status:'active',monthlyBudget:300000,metric:0,metricLabel:'팔로워',goal:'브랜드 인지도',priority:'high',note:'교육 인사이트·제품 소개 콘텐츠'},
-      {id:'ch2',name:'LinkedIn',type:'SNS',status:'active',monthlyBudget:200000,metric:0,metricLabel:'팔로워',goal:'B2B 파트너십',priority:'high',note:'에듀테크 트렌드·파트너십 홍보'},
-      {id:'ch3',name:'블로그/미디엄',type:'블로그/미디엄',status:'planning',monthlyBudget:0,metric:0,metricLabel:'월 방문자',goal:'SEO & 콘텐츠 마케팅',priority:'medium',note:'교육·AI 트렌드 아티클'},
-      {id:'ch4',name:'이메일 뉴스레터',type:'이메일',status:'planning',monthlyBudget:0,metric:0,metricLabel:'구독자',goal:'리드 육성',priority:'medium',note:'월 1회 에듀테크 뉴스레터'},
-      {id:'ch5',name:'이벤트/박람회',type:'이벤트/박람회',status:'planning',monthlyBudget:500000,metric:0,metricLabel:'참가 건수',goal:'교육기관 직접 접촉',priority:'high',note:'교육 박람회·세미나 참여'},
+      {id:'ch1',name:'Instagram',type:'SNS',status:'active',monthlyBudget:300000,metric:0,metricLabel:'팔로워',metricGoal:1000,metricHistory:[],goal:'브랜드 인지도',priority:'high',note:'교육 인사이트·제품 소개 콘텐츠'},
+      {id:'ch2',name:'LinkedIn',type:'SNS',status:'active',monthlyBudget:200000,metric:0,metricLabel:'팔로워',metricGoal:500,metricHistory:[],goal:'B2B 파트너십',priority:'high',note:'에듀테크 트렌드·파트너십 홍보'},
+      {id:'ch3',name:'블로그/미디엄',type:'블로그/미디엄',status:'planning',monthlyBudget:0,metric:0,metricLabel:'월 방문자',metricGoal:2000,metricHistory:[],goal:'SEO & 콘텐츠 마케팅',priority:'medium',note:'교육·AI 트렌드 아티클'},
+      {id:'ch4',name:'이메일 뉴스레터',type:'이메일',status:'planning',monthlyBudget:0,metric:0,metricLabel:'구독자',metricGoal:300,metricHistory:[],goal:'리드 육성',priority:'medium',note:'월 1회 에듀테크 뉴스레터'},
+      {id:'ch5',name:'이벤트/박람회',type:'이벤트/박람회',status:'planning',monthlyBudget:500000,metric:0,metricLabel:'참가 건수',metricGoal:5,metricHistory:[],goal:'교육기관 직접 접촉',priority:'high',note:'교육 박람회·세미나 참여'},
     ],
     campaigns:[
-      {id:'cam1',name:'베타 테스터 모집',channels:'Instagram · 이메일',status:'planning',startDate:'2026-03',endDate:'2026-04',budget:500000,goal:'베타 사용자 50명',result:'',description:'MVP 출시 전 베타 테스터 모집 캠페인. 교육 관련 커뮤니티 및 SNS 활용'},
-      {id:'cam2',name:'교육기관 파트너십 PR',channels:'LinkedIn · PR',status:'planning',startDate:'2026-02',endDate:'2026-06',budget:1000000,goal:'파트너십 5건',result:'',description:'학교·학원 대상 파트너십 홍보. 케이스스터디 및 데모 중심'},
+      {id:'cam1',name:'베타 테스터 모집',channels:'Instagram · 이메일',status:'planning',startDate:'2026-03',endDate:'2026-04',budget:500000,goal:'베타 사용자 50명',achievement:0,result:'',description:'MVP 출시 전 베타 테스터 모집 캠페인. 교육 관련 커뮤니티 및 SNS 활용'},
+      {id:'cam2',name:'교육기관 파트너십 PR',channels:'LinkedIn · PR',status:'planning',startDate:'2026-02',endDate:'2026-06',budget:1000000,goal:'파트너십 5건',achievement:0,result:'',description:'학교·학원 대상 파트너십 홍보. 케이스스터디 및 데모 중심'},
     ],
     content:[
       {id:'ct1',title:'QuadY AI 교육 플랫폼 소개',channel:'Instagram',type:'SNS 포스팅',status:'draft',plannedDate:'2026-02',note:'브랜드 첫 포스팅'},
@@ -1425,16 +1425,24 @@ const MarketingView=({roadmap})=>{
       {id:'ct4',title:'베타 테스터 모집 공고',channel:'Instagram · LinkedIn',type:'SNS 포스팅',status:'draft',plannedDate:'2026-03',note:'캠페인 연계'},
     ]
   });
-  const load=()=>{try{const s=localStorage.getItem(LS);if(s)return JSON.parse(s);}catch(e){}return defData();};
+  const load=()=>{
+    try{
+      const s2=localStorage.getItem('quady-mkt-v2');
+      if(s2)return JSON.parse(s2);
+      const s1=localStorage.getItem('quady-mkt-v1');
+      if(s1){const old=JSON.parse(s1);return{...defData(),strategy:{...defData().strategy,...old.strategy},channels:(old.channels||[]).map(ch=>({metricGoal:0,metricHistory:[],...ch})),campaigns:(old.campaigns||[]).map(c=>({achievement:0,...c})),content:old.content||[]};}
+    }catch(e){}
+    return defData();
+  };
 
   const[data,setData]=useState(load);
   const[tab,setTab]=useState('overview');
   const[showCamMod,setShowCamMod]=useState(false);
   const[editCamId,setEditCamId]=useState(null);
-  const[camForm,setCamForm]=useState({name:'',channels:'',status:'planning',startDate:'',endDate:'',budget:'',goal:'',result:'',description:''});
+  const[camForm,setCamForm]=useState({name:'',channels:'',status:'planning',startDate:'',endDate:'',budget:'',goal:'',achievement:'',result:'',description:''});
   const[showChanMod,setShowChanMod]=useState(false);
   const[editChanId,setEditChanId]=useState(null);
-  const[chanForm,setChanForm]=useState({name:'',type:'SNS',status:'active',monthlyBudget:'',metric:'',metricLabel:'팔로워',goal:'',priority:'medium',note:''});
+  const[chanForm,setChanForm]=useState({name:'',type:'SNS',status:'active',monthlyBudget:'',metric:'',metricLabel:'팔로워',metricGoal:'',goal:'',priority:'medium',note:''});
   const[showConMod,setShowConMod]=useState(false);
   const[editConId,setEditConId]=useState(null);
   const[conForm,setConForm]=useState({title:'',channel:'',type:'블로그',status:'draft',plannedDate:'',note:''});
@@ -1442,22 +1450,30 @@ const MarketingView=({roadmap})=>{
   const[stratForm,setStratForm]=useState(null);
   const[newAudInp,setNewAudInp]=useState('');
   const[newMsgInp,setNewMsgInp]=useState('');
+  const[showMetricMod,setShowMetricMod]=useState(false);
+  const[metricChanId,setMetricChanId]=useState(null);
+  const[metricVal,setMetricVal]=useState('');
+  const[metricDate,setMetricDate]=useState('');
 
   const save=d=>{setData(d);try{localStorage.setItem(LS,JSON.stringify(d));}catch(e){}};
   const{strategy,channels,campaigns,content}=data;
-  const fmt=n=>{if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=10000)return Math.round(n/10000)+'만';return (n||0).toLocaleString();};
+  const fmt=n=>{if(!n&&n!==0)return'0';if(n>=100000000)return(n/100000000).toFixed(1)+'억';if(n>=10000)return Math.round(n/10000)+'만';return (n||0).toLocaleString();};
 
   // Campaign CRUD
-  const openAddCam=()=>{setCamForm({name:'',channels:'',status:'planning',startDate:'',endDate:'',budget:'',goal:'',result:'',description:''});setEditCamId(null);setShowCamMod(true);};
-  const openEditCam=c=>{setCamForm({...c,budget:String(c.budget)});setEditCamId(c.id);setShowCamMod(true);};
-  const submitCam=()=>{if(!camForm.name.trim())return;const b=Number(String(camForm.budget).replace(/,/g,''))||0;const nc={...camForm,budget:b};const newCams=editCamId?campaigns.map(c=>c.id===editCamId?{...nc,id:editCamId}:c):[...campaigns,{...nc,id:'cam'+Date.now()}];save({...data,campaigns:newCams});setShowCamMod(false);};
+  const openAddCam=()=>{const d=new Date();const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');setCamForm({name:'',channels:'',status:'planning',startDate:ym,endDate:'',budget:'',goal:'',achievement:'',result:'',description:''});setEditCamId(null);setShowCamMod(true);};
+  const openEditCam=c=>{setCamForm({...c,budget:String(c.budget),achievement:String(c.achievement||'')});setEditCamId(c.id);setShowCamMod(true);};
+  const submitCam=()=>{if(!camForm.name.trim())return;const b=Number(String(camForm.budget).replace(/,/g,''))||0;const ach=Math.min(100,Math.max(0,Number(camForm.achievement)||0));const nc={...camForm,budget:b,achievement:ach};const newCams=editCamId?campaigns.map(c=>c.id===editCamId?{...nc,id:editCamId}:c):[...campaigns,{...nc,id:'cam'+Date.now()}];save({...data,campaigns:newCams});setShowCamMod(false);};
   const delCam=id=>{if(!window.confirm('삭제하시겠습니까?'))return;save({...data,campaigns:campaigns.filter(c=>c.id!==id)});};
 
   // Channel CRUD
-  const openAddChan=()=>{setChanForm({name:'',type:'SNS',status:'active',monthlyBudget:'',metric:'',metricLabel:'팔로워',goal:'',priority:'medium',note:''});setEditChanId(null);setShowChanMod(true);};
-  const openEditChan=c=>{setChanForm({...c,monthlyBudget:String(c.monthlyBudget),metric:String(c.metric)});setEditChanId(c.id);setShowChanMod(true);};
-  const submitChan=()=>{if(!chanForm.name.trim())return;const b=Number(String(chanForm.monthlyBudget).replace(/,/g,''))||0;const m=Number(String(chanForm.metric).replace(/,/g,''))||0;const nc={...chanForm,monthlyBudget:b,metric:m};const newChans=editChanId?channels.map(c=>c.id===editChanId?{...nc,id:editChanId}:c):[...channels,{...nc,id:'ch'+Date.now()}];save({...data,channels:newChans});setShowChanMod(false);};
+  const openAddChan=()=>{setChanForm({name:'',type:'SNS',status:'active',monthlyBudget:'',metric:'',metricLabel:'팔로워',metricGoal:'',goal:'',priority:'medium',note:''});setEditChanId(null);setShowChanMod(true);};
+  const openEditChan=c=>{setChanForm({...c,monthlyBudget:String(c.monthlyBudget),metric:String(c.metric),metricGoal:String(c.metricGoal||'')});setEditChanId(c.id);setShowChanMod(true);};
+  const submitChan=()=>{if(!chanForm.name.trim())return;const b=Number(String(chanForm.monthlyBudget).replace(/,/g,''))||0;const m=Number(String(chanForm.metric).replace(/,/g,''))||0;const mg=Number(String(chanForm.metricGoal).replace(/,/g,''))||0;const existHist=editChanId?(channels.find(c=>c.id===editChanId)?.metricHistory||[]):[];const nc={...chanForm,monthlyBudget:b,metric:m,metricGoal:mg,metricHistory:existHist};const newChans=editChanId?channels.map(c=>c.id===editChanId?{...nc,id:editChanId}:c):[...channels,{...nc,id:'ch'+Date.now()}];save({...data,channels:newChans});setShowChanMod(false);};
   const delChan=id=>{if(!window.confirm('삭제하시겠습니까?'))return;save({...data,channels:channels.filter(c=>c.id!==id)});};
+
+  // Quick metric update
+  const openMetricUpdate=ch=>{const d=new Date();setMetricDate(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));setMetricVal(String(ch.metric||''));setMetricChanId(ch.id);setShowMetricMod(true);};
+  const submitMetric=()=>{const v=Number(String(metricVal).replace(/,/g,''))||0;const ch=channels.find(c=>c.id===metricChanId);if(!ch)return;const newHist=[...(ch.metricHistory||[]).filter(h=>h.date!==metricDate),{date:metricDate,value:v}].sort((a,b)=>a.date.localeCompare(b.date));const newChans=channels.map(c=>c.id===metricChanId?{...c,metric:v,metricHistory:newHist}:c);save({...data,channels:newChans});setShowMetricMod(false);};
 
   // Content CRUD
   const openAddCon=()=>{const d=new Date();const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');setConForm({title:'',channel:'',type:'블로그',status:'draft',plannedDate:ym,note:''});setEditConId(null);setShowConMod(true);};
@@ -1468,17 +1484,23 @@ const MarketingView=({roadmap})=>{
   // Strategy edit
   const startStratEdit=()=>{setStratForm({...strategy,targetAudience:[...(strategy.targetAudience||[])],keyMessages:[...(strategy.keyMessages||[])]});setStratEdit(true);};
   const saveStrat=()=>{save({...data,strategy:stratForm});setStratEdit(false);};
+  const moveMsg=(i,dir)=>{const arr=[...stratForm.keyMessages];const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];setStratForm(f=>({...f,keyMessages:arr}));};
+  const moveAud=(i,dir)=>{const arr=[...stratForm.targetAudience];const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];setStratForm(f=>({...f,targetAudience:arr}));};
+
+  // Progress bar component
+  const PBar=({value,max,color,height})=>{const h=height||8;const pct=max>0?Math.min(100,Math.round(value/max*100)):0;return(<div style={{width:'100%'}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}><span style={{fontSize:10,color:'var(--muted)'}}>{(value||0).toLocaleString()} / {(max||0).toLocaleString()}</span><span style={{fontSize:10,fontWeight:700,color:pct>=100?'#16A34A':pct>=50?color:'var(--muted)'}}>{pct}%</span></div><div style={{width:'100%',height:h,background:'#F3F4F6',borderRadius:h/2,overflow:'hidden'}}><div style={{width:pct+'%',height:'100%',background:pct>=100?'#16A34A':color,borderRadius:h/2,transition:'width .4s ease'}}/></div></div>);};
 
   const totalCamBudget=campaigns.reduce((s,c)=>s+(c.budget||0),0);
   const totalChanBudget=channels.reduce((s,c)=>s+(c.monthlyBudget||0),0);
   const activeCams=campaigns.filter(c=>c.status==='active').length;
   const publishedCon=content.filter(c=>c.status==='published').length;
+  const activeChans=channels.filter(c=>c.status==='active').length;
 
   return(
     <div style={{display:'flex',flexDirection:'column',flex:1,overflow:'hidden'}} className="fade">
       {/* 서브탭 */}
       <div style={{background:'white',borderBottom:'1px solid var(--border)',flexShrink:0,display:'flex',alignItems:'center',padding:'0 12px',gap:0,flexWrap:'wrap'}}>
-        {[['overview','📊 개요'],['campaigns','🚀 캠페인'],['channels','📡 채널'],['content','✍️ 콘텐츠']].map(([k,l])=>(
+        {[['overview','📊 개요'],['performance','📈 실적'],['campaigns','🚀 캠페인'],['channels','📡 채널'],['content','✍️ 콘텐츠']].map(([k,l])=>(
           <button key={k} onClick={()=>setTab(k)}
             style={{padding:'11px 14px',border:'none',borderBottom:tab===k?'2.5px solid var(--teal)':'2.5px solid transparent',background:'none',fontSize:13,fontWeight:tab===k?700:500,color:tab===k?'var(--teal)':'var(--text2)',cursor:'pointer',whiteSpace:'nowrap',transition:'all .18s'}}>
             {l}
@@ -1499,7 +1521,7 @@ const MarketingView=({roadmap})=>{
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:12,marginBottom:20}}>
             {[
               {l:'활성 캠페인',v:activeCams+'개',sub:campaigns.length+'개 중',c:'#2563EB'},
-              {l:'운영 채널',v:channels.filter(c=>c.status==='active').length+'개',sub:channels.length+'개 중',c:'#0D9488'},
+              {l:'운영 채널',v:activeChans+'개',sub:channels.length+'개 중',c:'#0D9488'},
               {l:'캠페인 예산',v:fmt(totalCamBudget)+'원',sub:'누적',c:'#D97706'},
               {l:'채널 월 예산',v:fmt(totalChanBudget)+'원',sub:'월',c:'#7C3AED'},
               {l:'콘텐츠 발행',v:publishedCon+'개',sub:content.length+'개 중',c:'#16A34A'},
@@ -1535,11 +1557,14 @@ const MarketingView=({roadmap})=>{
                   </div>
                   <div style={{marginBottom:10}}>
                     <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:6}}>타겟 고객</div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:6}}>
+                    <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:6}}>
                       {(stratForm.targetAudience||[]).map((a,i)=>(
-                        <span key={i} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 9px',background:'#DBEAFE',color:'#2563EB',borderRadius:10,fontSize:12,fontWeight:600}}>
-                          {a}<button onClick={()=>setStratForm(f=>({...f,targetAudience:f.targetAudience.filter((_,j)=>j!==i)}))} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'#2563EB',padding:0,fontWeight:700}}>×</button>
-                        </span>
+                        <div key={i} style={{display:'flex',alignItems:'center',gap:5,padding:'4px 8px',background:'#DBEAFE',borderRadius:8}}>
+                          <span style={{flex:1,fontSize:12,fontWeight:600,color:'#2563EB'}}>{a}</span>
+                          <button onClick={()=>moveAud(i,-1)} disabled={i===0} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:'#2563EB',padding:'0 2px',opacity:i===0?.3:1}}>↑</button>
+                          <button onClick={()=>moveAud(i,1)} disabled={i===(stratForm.targetAudience.length-1)} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:'#2563EB',padding:'0 2px',opacity:i===(stratForm.targetAudience.length-1)?.3:1}}>↓</button>
+                          <button onClick={()=>setStratForm(f=>({...f,targetAudience:f.targetAudience.filter((_,j)=>j!==i)}))} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'#DC2626',padding:0,fontWeight:700}}>×</button>
+                        </div>
                       ))}
                     </div>
                     <div style={{display:'flex',gap:6}}>
@@ -1554,6 +1579,8 @@ const MarketingView=({roadmap})=>{
                         <div key={i} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 9px',background:'#F0FDF9',border:'1px solid #A7F3D0',borderRadius:7}}>
                           <div style={{width:5,height:5,borderRadius:2,background:'var(--teal)',flexShrink:0}}/>
                           <span style={{flex:1,fontSize:12,color:'var(--text)'}}>{m}</span>
+                          <button onClick={()=>moveMsg(i,-1)} disabled={i===0} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:'var(--teal)',padding:'0 2px',opacity:i===0?.3:1}}>↑</button>
+                          <button onClick={()=>moveMsg(i,1)} disabled={i===(stratForm.keyMessages.length-1)} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:'var(--teal)',padding:'0 2px',opacity:i===(stratForm.keyMessages.length-1)?.3:1}}>↓</button>
                           <button onClick={()=>setStratForm(f=>({...f,keyMessages:f.keyMessages.filter((_,j)=>j!==i)}))} style={{background:'none',border:'none',cursor:'pointer',fontSize:14,color:'#DC2626',fontWeight:700,padding:0}}>×</button>
                         </div>
                       ))}
@@ -1603,50 +1630,199 @@ const MarketingView=({roadmap})=>{
 
             {/* 채널 현황 */}
             <div style={{background:'white',borderRadius:13,padding:20,boxShadow:'var(--shadow)',border:'1px solid var(--border)'}}>
-              <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:14}}>📡 채널 현황</div>
-              {channels.map(ch=>(
-                <div key={ch.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
-                  <div style={{width:32,height:32,borderRadius:9,background:PRIO[ch.priority]?.c+'18'||'#F3F4F6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>
-                    {CHAN_ICONS[ch.name]||'📣'}
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                <div style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>📡 채널 현황</div>
+                <button onClick={()=>setTab('channels')} style={{padding:'4px 10px',background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:6,fontSize:11,cursor:'pointer',color:'var(--text2)',fontWeight:600}}>전체보기</button>
+              </div>
+              {channels.map(ch=>{
+                const pColor=PRIO[ch.priority]?.c||'#6B7280';
+                const pct=ch.metricGoal>0?Math.min(100,Math.round((ch.metric||0)/ch.metricGoal*100)):null;
+                return(
+                  <div key={ch.id} style={{padding:'10px 0',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:pct!==null?6:0}}>
+                      <div style={{width:28,height:28,borderRadius:7,background:pColor+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{CHAN_ICONS[ch.name]||'📣'}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{ch.name}</div>
+                        <div style={{fontSize:10,color:'var(--muted)'}}>{ch.goal}</div>
+                      </div>
+                      <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:2}}>
+                        <span style={{fontSize:10,padding:'1px 6px',borderRadius:5,fontWeight:700,background:ch.status==='active'?'#DCFCE7':'#F3F4F6',color:ch.status==='active'?'#16A34A':'#6B7280'}}>{ch.status==='active'?'운영중':'계획중'}</span>
+                        {ch.metric>0&&<span style={{fontSize:10,color:pColor,fontWeight:700}}>{(ch.metric||0).toLocaleString()} {ch.metricLabel}</span>}
+                      </div>
+                    </div>
+                    {pct!==null&&<div style={{paddingLeft:36}}><PBar value={ch.metric||0} max={ch.metricGoal} color={pColor} height={6}/></div>}
                   </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{ch.name}</div>
-                    <div style={{fontSize:10,color:'var(--muted)'}}>{ch.goal}</div>
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>
-                    <span style={{fontSize:10,padding:'2px 7px',borderRadius:6,fontWeight:700,background:ch.status==='active'?'#DCFCE7':'#F3F4F6',color:ch.status==='active'?'#16A34A':'#6B7280'}}>
-                      {ch.status==='active'?'운영중':'계획중'}
-                    </span>
-                    {ch.metric>0&&<span style={{fontSize:10,color:'var(--muted)'}}>{ch.metric.toLocaleString()} {ch.metricLabel}</span>}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           {/* 진행 캠페인 */}
           <div style={{background:'white',borderRadius:13,padding:20,boxShadow:'var(--shadow)',border:'1px solid var(--border)'}}>
-            <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:14}}>🚀 캠페인 현황</div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+              <div style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>🚀 캠페인 현황</div>
+              <button onClick={()=>setTab('campaigns')} style={{padding:'4px 10px',background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:6,fontSize:11,cursor:'pointer',color:'var(--text2)',fontWeight:600}}>전체보기</button>
+            </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
               {campaigns.map(c=>{
                 const s=STATUS_CAM[c.status]||STATUS_CAM.planning;
+                const ach=Number(c.achievement)||0;
                 return(
                   <div key={c.id} style={{padding:14,border:'1.5px solid '+s.c+'44',borderRadius:11,background:s.bg+'66'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
                       <div style={{fontSize:13,fontWeight:700,color:'var(--text)',flex:1,marginRight:8}}>{c.name}</div>
                       <span style={{fontSize:10,padding:'2px 7px',borderRadius:6,fontWeight:700,background:s.bg,color:s.c,flexShrink:0}}>{s.l}</span>
                     </div>
-                    <div style={{fontSize:11,color:'var(--muted)',marginBottom:4}}>{c.channels}</div>
-                    <div style={{fontSize:11,color:'var(--text)',marginBottom:6}}>{c.startDate} ~ {c.endDate}</div>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <div style={{fontSize:12,fontWeight:600,color:'var(--teal)'}}>목표: {c.goal}</div>
-                      <div style={{fontSize:12,color:'var(--muted)'}}>{fmt(c.budget)}원</div>
+                    <div style={{fontSize:11,color:'var(--text)',marginBottom:ach>0?8:0}}>목표: {c.goal}</div>
+                    {ach>0&&<PBar value={ach} max={100} color={s.c==='#6B7280'?'#2563EB':s.c} height={7}/>}
+                    {c.result&&<div style={{marginTop:6,fontSize:11,color:'#16A34A',fontWeight:600}}>✓ {c.result}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 실적 탭 ── */}
+      {tab==='performance'&&(
+        <div style={{flex:1,overflow:'auto',padding:20}}>
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:4}}>📈 마케팅 실적 현황</div>
+            <div style={{fontSize:12,color:'var(--muted)'}}>채널 지표, 캠페인 달성률, 콘텐츠 발행률을 수치로 확인하고 지표를 업데이트하세요.</div>
+          </div>
+
+          {/* 채널 지표 달성률 */}
+          <div style={{background:'white',borderRadius:13,padding:20,boxShadow:'var(--shadow)',border:'1px solid var(--border)',marginBottom:16}}>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:16}}>📡 채널 지표 달성률</div>
+            {channels.filter(ch=>ch.metricGoal>0).length===0&&<div style={{textAlign:'center',padding:'20px 0',color:'var(--muted)',fontSize:13}}>채널 편집에서 목표 수치를 설정하면 달성률이 표시됩니다.</div>}
+            <div style={{display:'flex',flexDirection:'column',gap:18}}>
+              {channels.filter(ch=>ch.metricGoal>0).map(ch=>{
+                const pColor=PRIO[ch.priority]?.c||'#6B7280';
+                const pct=Math.min(100,Math.round((ch.metric||0)/ch.metricGoal*100));
+                return(
+                  <div key={ch.id}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+                      <div style={{width:36,height:36,borderRadius:9,background:pColor+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{CHAN_ICONS[ch.name]||'📣'}</div>
+                      <div style={{flex:1}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                          <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{ch.name}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:pct>=100?'#16A34A':pct>=50?pColor:'var(--muted)'}}>{pct}% 달성</span>
+                        </div>
+                        <PBar value={ch.metric||0} max={ch.metricGoal} color={pColor} height={10}/>
+                        <div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>목표: {(ch.metricGoal).toLocaleString()} {ch.metricLabel}</div>
+                      </div>
+                      <button onClick={()=>openMetricUpdate(ch)} style={{padding:'6px 12px',background:'var(--teal)',color:'white',border:'none',borderRadius:7,fontSize:11,fontWeight:700,cursor:'pointer',flexShrink:0,whiteSpace:'nowrap'}}>지표 업데이트</button>
+                    </div>
+                    {ch.metricHistory&&ch.metricHistory.length>1&&(
+                      <div style={{paddingLeft:46,marginTop:4}}>
+                        <div style={{fontSize:10,color:'var(--muted)',marginBottom:4}}>📊 월별 추이</div>
+                        <div style={{display:'flex',alignItems:'flex-end',gap:5,height:44}}>
+                          {ch.metricHistory.slice(-10).map((h,i)=>{
+                            const maxV=Math.max(...ch.metricHistory.map(x=>x.value),1);
+                            const barH=Math.max(4,Math.round(h.value/maxV*36));
+                            return(
+                              <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+                                <div style={{width:22,height:barH,background:pColor,borderRadius:'3px 3px 0 0',opacity:.8}}/>
+                                <div style={{fontSize:8,color:'var(--muted)',whiteSpace:'nowrap'}}>{h.date.slice(5)}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {channels.filter(ch=>!ch.metricGoal||ch.metricGoal===0).length>0&&(
+              <div style={{marginTop:16,paddingTop:16,borderTop:'1px solid var(--border)'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:10}}>목표 미설정 채널</div>
+                {channels.filter(ch=>!ch.metricGoal||ch.metricGoal===0).map(ch=>(
+                  <div key={ch.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{width:30,height:30,borderRadius:7,background:'#F3F4F6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{CHAN_ICONS[ch.name]||'📣'}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:12,fontWeight:600,color:'var(--text)'}}>{ch.name}</div>
+                      <div style={{fontSize:11,color:'var(--muted)'}}>현재: {(ch.metric||0).toLocaleString()} {ch.metricLabel}</div>
+                    </div>
+                    <button onClick={()=>openMetricUpdate(ch)} style={{padding:'5px 10px',background:'var(--surface2)',color:'var(--text2)',border:'1px solid var(--border)',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}>지표 업데이트</button>
+                    <button onClick={()=>openEditChan(ch)} style={{padding:'5px 10px',background:'var(--surface2)',color:'var(--text2)',border:'1px solid var(--border)',borderRadius:7,fontSize:11,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}>목표 설정</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 캠페인 달성률 */}
+          <div style={{background:'white',borderRadius:13,padding:20,boxShadow:'var(--shadow)',border:'1px solid var(--border)',marginBottom:16}}>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:16}}>🚀 캠페인 달성률</div>
+            {campaigns.length===0&&<div style={{textAlign:'center',padding:'20px 0',color:'var(--muted)',fontSize:13}}>캠페인 없음</div>}
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              {campaigns.map(c=>{
+                const s=STATUS_CAM[c.status]||STATUS_CAM.planning;
+                const ach=Number(c.achievement)||0;
+                return(
+                  <div key={c.id} style={{padding:'12px 14px',border:'1px solid var(--border)',borderRadius:10,background:'var(--surface2)'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{c.name}</div>
+                        <div style={{fontSize:11,color:'var(--muted)'}}>목표: {c.goal}</div>
+                      </div>
+                      <span style={{fontSize:10,padding:'2px 7px',borderRadius:6,fontWeight:700,background:s.bg,color:s.c}}>{s.l}</span>
+                      <button onClick={()=>openEditCam(c)} style={{padding:'4px 10px',background:'white',border:'1px solid var(--border)',borderRadius:6,fontSize:11,cursor:'pointer',color:'var(--text2)',fontWeight:600}}>편집</button>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{flex:1}}><PBar value={ach} max={100} color={s.c==='#6B7280'?'#2563EB':s.c} height={8}/></div>
+                      <span style={{fontSize:15,fontWeight:800,color:ach>=100?'#16A34A':ach>=50?'#D97706':'var(--muted)',minWidth:42,textAlign:'right'}}>{ach}%</span>
                     </div>
                     {c.result&&<div style={{marginTop:6,fontSize:11,color:'#16A34A',fontWeight:600}}>✓ {c.result}</div>}
                   </div>
                 );
               })}
             </div>
+          </div>
+
+          {/* 콘텐츠 발행률 */}
+          <div style={{background:'white',borderRadius:13,padding:20,boxShadow:'var(--shadow)',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:16}}>✍️ 콘텐츠 발행률</div>
+            {(()=>{
+              const total=content.length;
+              const pub=content.filter(c=>c.status==='published').length;
+              const ready=content.filter(c=>c.status==='ready').length;
+              const draft=content.filter(c=>c.status==='draft').length;
+              const cancelled=content.filter(c=>c.status==='cancelled').length;
+              if(total===0)return<div style={{textAlign:'center',padding:'20px 0',color:'var(--muted)',fontSize:13}}>콘텐츠 없음</div>;
+              return(
+                <div>
+                  <div style={{marginBottom:14}}>
+                    <PBar value={pub} max={total} color='#16A34A' height={12}/>
+                    <div style={{fontSize:11,color:'var(--muted)',marginTop:5}}>전체 {total}개 중 {pub}개 발행완료</div>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:16}}>
+                    {[{l:'발행완료',v:pub,c:'#16A34A',bg:'#DCFCE7'},{l:'준비완료',v:ready,c:'#D97706',bg:'#FEF3C7'},{l:'초안',v:draft,c:'#6B7280',bg:'#F3F4F6'},{l:'취소',v:cancelled,c:'#DC2626',bg:'#FEE2E2'}].map(st=>(
+                      <div key={st.l} style={{padding:'10px 12px',background:st.bg,borderRadius:9,textAlign:'center'}}>
+                        <div style={{fontSize:20,fontWeight:800,color:st.c}}>{st.v}</div>
+                        <div style={{fontSize:10,color:st.c,fontWeight:600,marginTop:2}}>{st.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:'var(--muted)',marginBottom:8}}>채널별 콘텐츠</div>
+                    {(()=>{
+                      const byChan={};
+                      content.forEach(c=>{(c.channel||'미분류').split('·').forEach(ch=>{const k=ch.trim();if(!byChan[k])byChan[k]={total:0,pub:0};byChan[k].total++;if(c.status==='published')byChan[k].pub++;});});
+                      return Object.entries(byChan).sort((a,b)=>b[1].total-a[1].total).map(([ch,stat])=>(
+                        <div key={ch} style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+                          <div style={{width:80,fontSize:11,color:'var(--text2)',fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ch}</div>
+                          <div style={{flex:1}}><PBar value={stat.pub} max={stat.total} color='#0D9488' height={6}/></div>
+                          <div style={{fontSize:11,color:'var(--muted)',minWidth:40,textAlign:'right'}}>{stat.pub}/{stat.total}</div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -1671,7 +1847,7 @@ const MarketingView=({roadmap})=>{
                       <button onClick={()=>delCam(c.id)} style={{padding:'5px 8px',background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:7,fontSize:11,cursor:'pointer',color:'#DC2626',fontWeight:700}}>삭제</button>
                     </div>
                   </div>
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginBottom:c.result?12:0}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginBottom:12}}>
                     {[['📡 채널',c.channels],['📅 기간',c.startDate+' ~ '+c.endDate],['💰 예산',fmt(c.budget)+'원'],['🎯 목표',c.goal]].map(([label,val])=>(
                       <div key={label} style={{background:'var(--surface2)',borderRadius:8,padding:'9px 12px'}}>
                         <div style={{fontSize:10,color:'var(--muted)',marginBottom:3}}>{label}</div>
@@ -1679,8 +1855,17 @@ const MarketingView=({roadmap})=>{
                       </div>
                     ))}
                   </div>
+                  {Number(c.achievement)>0&&(
+                    <div style={{marginBottom:10,padding:'10px 12px',background:'var(--surface2)',borderRadius:8}}>
+                      <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:6}}>달성률</div>
+                      <div style={{display:'flex',alignItems:'center',gap:10}}>
+                        <div style={{flex:1}}><PBar value={Number(c.achievement)} max={100} color={s.c==='#6B7280'?'#2563EB':s.c} height={8}/></div>
+                        <span style={{fontSize:14,fontWeight:800,color:Number(c.achievement)>=100?'#16A34A':Number(c.achievement)>=50?'#D97706':'var(--muted)',minWidth:38,textAlign:'right'}}>{c.achievement}%</span>
+                      </div>
+                    </div>
+                  )}
                   {c.result&&(
-                    <div style={{marginTop:8,padding:'9px 13px',background:'#DCFCE7',borderRadius:8,border:'1px solid #86EFAC',fontSize:12,fontWeight:600,color:'#16A34A'}}>
+                    <div style={{padding:'9px 13px',background:'#DCFCE7',borderRadius:8,border:'1px solid #86EFAC',fontSize:12,fontWeight:600,color:'#16A34A'}}>
                       ✓ 결과: {c.result}
                     </div>
                   )}
@@ -1697,44 +1882,46 @@ const MarketingView=({roadmap})=>{
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
             {channels.map(ch=>{
               const pColor=PRIO[ch.priority]?.c||'#6B7280';
+              const pct=ch.metricGoal>0?Math.min(100,Math.round((ch.metric||0)/ch.metricGoal*100)):null;
               return(
                 <div key={ch.id} style={{background:'white',borderRadius:13,border:'1px solid var(--border)',overflow:'hidden',boxShadow:'var(--shadow)'}}>
                   <div style={{height:4,background:pColor}}/>
                   <div style={{padding:16}}>
                     <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                      <div style={{width:42,height:42,borderRadius:11,background:pColor+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>
-                        {CHAN_ICONS[ch.name]||'📣'}
-                      </div>
+                      <div style={{width:42,height:42,borderRadius:11,background:pColor+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{CHAN_ICONS[ch.name]||'📣'}</div>
                       <div style={{flex:1}}>
                         <div style={{fontSize:14,fontWeight:700,color:'var(--text)'}}>{ch.name}</div>
                         <div style={{fontSize:11,color:'var(--muted)'}}>{ch.type}</div>
                       </div>
                       <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4}}>
-                        <span style={{fontSize:10,padding:'2px 7px',borderRadius:6,fontWeight:700,background:ch.status==='active'?'#DCFCE7':'#F3F4F6',color:ch.status==='active'?'#16A34A':'#6B7280'}}>
-                          {ch.status==='active'?'운영중':'계획중'}
-                        </span>
-                        <span style={{fontSize:10,padding:'1px 6px',borderRadius:5,fontWeight:600,background:pColor+'18',color:pColor}}>
-                          {PRIO[ch.priority]?.l||'중간'}
-                        </span>
+                        <span style={{fontSize:10,padding:'2px 7px',borderRadius:6,fontWeight:700,background:ch.status==='active'?'#DCFCE7':ch.status==='paused'?'#FEE2E2':'#F3F4F6',color:ch.status==='active'?'#16A34A':ch.status==='paused'?'#DC2626':'#6B7280'}}>{ch.status==='active'?'운영중':ch.status==='paused'?'중단':'계획중'}</span>
+                        <span style={{fontSize:10,padding:'1px 6px',borderRadius:5,fontWeight:600,background:pColor+'18',color:pColor}}>{PRIO[ch.priority]?.l||'중간'}</span>
                       </div>
                     </div>
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
                       <div style={{background:'var(--surface2)',borderRadius:8,padding:'8px 10px'}}>
                         <div style={{fontSize:9,color:'var(--muted)',marginBottom:2}}>월 예산</div>
                         <div style={{fontSize:13,fontWeight:700,color:'#D97706'}}>{fmt(ch.monthlyBudget)}원</div>
                       </div>
                       <div style={{background:'var(--surface2)',borderRadius:8,padding:'8px 10px'}}>
-                        <div style={{fontSize:9,color:'var(--muted)',marginBottom:2}}>{ch.metricLabel}</div>
+                        <div style={{fontSize:9,color:'var(--muted)',marginBottom:2}}>{ch.metricLabel} (현재)</div>
                         <div style={{fontSize:13,fontWeight:700,color:pColor}}>{(ch.metric||0).toLocaleString()}</div>
                       </div>
                     </div>
-                    <div style={{marginBottom:10}}>
+                    {pct!==null&&(
+                      <div style={{marginBottom:10}}>
+                        <div style={{fontSize:9,color:'var(--muted)',marginBottom:4}}>목표 달성 (목표: {(ch.metricGoal).toLocaleString()} {ch.metricLabel})</div>
+                        <PBar value={ch.metric||0} max={ch.metricGoal} color={pColor} height={8}/>
+                      </div>
+                    )}
+                    <div style={{marginBottom:8}}>
                       <div style={{fontSize:10,color:'var(--muted)',marginBottom:3}}>목표</div>
                       <div style={{fontSize:12,color:'var(--text)',fontWeight:500}}>{ch.goal}</div>
                     </div>
                     {ch.note&&<div style={{fontSize:11,color:'var(--muted)',marginBottom:10,fontStyle:'italic'}}>{ch.note}</div>}
                     <div style={{display:'flex',gap:6}}>
-                      <button onClick={()=>openEditChan(ch)} style={{flex:1,padding:'6px 0',background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:7,fontSize:11,cursor:'pointer',color:'var(--text2)',fontWeight:600}}>편집</button>
+                      <button onClick={()=>openMetricUpdate(ch)} style={{flex:1,padding:'6px 0',background:'var(--teal)',color:'white',border:'none',borderRadius:7,fontSize:11,cursor:'pointer',fontWeight:700}}>📊 지표 업데이트</button>
+                      <button onClick={()=>openEditChan(ch)} style={{padding:'6px 10px',background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:7,fontSize:11,cursor:'pointer',color:'var(--text2)',fontWeight:600}}>편집</button>
                       <button onClick={()=>delChan(ch.id)} style={{padding:'6px 10px',background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:7,fontSize:11,cursor:'pointer',color:'#DC2626',fontWeight:700}}>×</button>
                     </div>
                   </div>
@@ -1829,6 +2016,10 @@ const MarketingView=({roadmap})=>{
               <input value={camForm.goal} onChange={e=>setCamForm(f=>({...f,goal:e.target.value}))} className="inp" placeholder="예: 베타 사용자 50명 모집"/>
             </div>
             <div style={{marginBottom:11}}>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>달성률 (0~100%)</div>
+              <input type="number" min="0" max="100" value={camForm.achievement} onChange={e=>setCamForm(f=>({...f,achievement:e.target.value}))} className="inp" placeholder="0"/>
+            </div>
+            <div style={{marginBottom:11}}>
               <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>설명</div>
               <textarea value={camForm.description} onChange={e=>setCamForm(f=>({...f,description:e.target.value}))} className="inp" style={{resize:'vertical',minHeight:60}} placeholder="캠페인 상세 설명"/>
             </div>
@@ -1884,11 +2075,18 @@ const MarketingView=({roadmap})=>{
                 <input type="number" value={chanForm.monthlyBudget} onChange={e=>setChanForm(f=>({...f,monthlyBudget:e.target.value}))} className="inp" placeholder="300000"/>
               </div>
               <div>
-                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>현재 지표</div>
-                <div style={{display:'flex',gap:4}}>
-                  <input type="number" value={chanForm.metric} onChange={e=>setChanForm(f=>({...f,metric:e.target.value}))} className="inp" placeholder="0" style={{flex:1}}/>
-                  <input value={chanForm.metricLabel} onChange={e=>setChanForm(f=>({...f,metricLabel:e.target.value}))} className="inp" placeholder="팔로워" style={{width:70}}/>
-                </div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>지표 단위</div>
+                <input value={chanForm.metricLabel} onChange={e=>setChanForm(f=>({...f,metricLabel:e.target.value}))} className="inp" placeholder="팔로워"/>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:11}}>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>현재 지표 수치</div>
+                <input type="number" value={chanForm.metric} onChange={e=>setChanForm(f=>({...f,metric:e.target.value}))} className="inp" placeholder="0"/>
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>목표 수치 (달성 기준)</div>
+                <input type="number" value={chanForm.metricGoal} onChange={e=>setChanForm(f=>({...f,metricGoal:e.target.value}))} className="inp" placeholder="1000"/>
               </div>
             </div>
             <div style={{marginBottom:11}}>
@@ -1907,6 +2105,41 @@ const MarketingView=({roadmap})=>{
           </div>
         </div>
       )}
+
+      {/* 지표 업데이트 미니 모달 */}
+      {showMetricMod&&(()=>{
+        const ch=channels.find(c=>c.id===metricChanId);
+        if(!ch)return null;
+        return(
+          <div onClick={()=>setShowMetricMod(false)} style={{position:'fixed',inset:0,background:'rgba(13,20,36,.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:2100}}>
+            <div onClick={e=>e.stopPropagation()} style={{background:'white',borderRadius:14,padding:24,width:320,boxShadow:'0 20px 60px rgba(0,0,0,.22)'}}>
+              <div style={{fontSize:15,fontWeight:700,color:'var(--text)',marginBottom:4}}>📊 지표 업데이트</div>
+              <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>{ch.name} — {ch.metricLabel}</div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>기록 년월</div>
+                <input type="month" value={metricDate} onChange={e=>setMetricDate(e.target.value)} className="inp"/>
+              </div>
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--muted)',marginBottom:4}}>현재 {ch.metricLabel} 수치</div>
+                <input type="number" value={metricVal} onChange={e=>setMetricVal(e.target.value)} className="inp" placeholder="0"/>
+                {ch.metricGoal>0&&<div style={{fontSize:11,color:'var(--muted)',marginTop:4}}>목표: {(ch.metricGoal).toLocaleString()} {ch.metricLabel}</div>}
+                {ch.metricHistory&&ch.metricHistory.length>0&&(
+                  <div style={{marginTop:8,padding:'8px 10px',background:'var(--surface2)',borderRadius:7}}>
+                    <div style={{fontSize:10,color:'var(--muted)',marginBottom:4}}>최근 기록</div>
+                    {ch.metricHistory.slice(-3).reverse().map((h,i)=>(
+                      <div key={i} style={{fontSize:11,color:'var(--text2)',marginBottom:2}}>{h.date}: {h.value.toLocaleString()} {ch.metricLabel}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+                <button onClick={()=>setShowMetricMod(false)} style={{padding:'8px 14px',background:'transparent',border:'1.5px solid var(--border)',borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer',color:'var(--text2)'}}>취소</button>
+                <button onClick={submitMetric} style={{padding:'8px 18px',background:'var(--teal)',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>저장</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 콘텐츠 모달 */}
       {showConMod&&(

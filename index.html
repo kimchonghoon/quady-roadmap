@@ -1047,99 +1047,192 @@ function DetailView({roadmap,activePhase,setActivePhase,onEditTask,onEditPhase,f
 /* ─── DASHBOARD VIEW ─── */
 function DashboardView({roadmap,totalProg,onEditTask,setView,setActivePhase,filterStatus}){
   const allTasks=roadmap.phases.flatMap(p=>p.tasks);
-  const statCards=[
-    {label:"평균 진행도",val:`${totalProg}/10`,color:getProgColor(totalProg),bg:"#F0FDF4"},
-    {label:"완료 작업",val:allTasks.filter(t=>t.status==="completed").length,sub:"건",color:"#059669",bg:"#ECFDF5"},
-    {label:"진행 중",val:allTasks.filter(t=>t.status==="in-progress").length,sub:"건",color:"#2563EB",bg:"#EFF6FF"},
-    {label:"미착수",val:allTasks.filter(t=>t.status==="not-started").length,sub:"건",color:"#94A3B8",bg:"#F8FAFC"},
-    {label:"보류",val:allTasks.filter(t=>t.status==="blocked").length,sub:"건",color:"#DC2626",bg:"#FEF2F2"},
-    {label:"높은 우선순위",val:allTasks.filter(t=>t.priority==="high").length,sub:"건",color:"#D97706",bg:"#FFFBEB"},
-  ];
+  const completed=allTasks.filter(t=>t.status==="completed").length;
+  const inprog=allTasks.filter(t=>t.status==="in-progress").length;
+  const blocked=allTasks.filter(t=>t.status==="blocked").length;
+  const highPriCount=allTasks.filter(t=>t.priority==="high"&&t.status!=="completed").length;
 
-  const upcoming=allTasks.filter(t=>t.deadline&&new Date(t.deadline)<new Date(Date.now()+14*86400000)&&t.status!=="completed").sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).slice(0,5);
-  const highPri=allTasks.filter(t=>t.priority==="high"&&t.status!=="completed"&&(filterStatus==="all"||t.status===filterStatus)).slice(0,6);
+  const inProgTasks=allTasks.filter(t=>t.status==="in-progress").slice(0,6);
+  const highPri=allTasks.filter(t=>t.priority==="high"&&t.status!=="completed").slice(0,8);
+
+  // 담당자별 집계
+  const assigneeMap={};
+  allTasks.forEach(t=>{
+    const a=t.assignee||"미배정";
+    if(!assigneeMap[a])assigneeMap[a]={total:0,done:0,inprog:0,blocked:0};
+    assigneeMap[a].total++;
+    if(t.status==="completed")assigneeMap[a].done++;
+    else if(t.status==="in-progress")assigneeMap[a].inprog++;
+    else if(t.status==="blocked")assigneeMap[a].blocked++;
+  });
+  const assignees=Object.entries(assigneeMap).sort((a,b)=>b[1].total-a[1].total);
+
+  const sectionLabel={fontSize:11,fontWeight:700,color:"var(--muted)",letterSpacing:".07em",textTransform:"uppercase",margin:"0 0 12px"};
+  const card={background:"white",borderRadius:14,border:"1px solid var(--border)",boxShadow:"var(--shadow-sm)"};
 
   return(
-    <div style={{maxWidth:1280,margin:"0 auto",padding:"20px 24px"}} className="fade">
-      {/* Stat cards */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:20}}>
-        {statCards.map((s,i)=>(
-          <div key={i} className="card" style={{padding:"18px 20px",borderTop:`3px solid ${s.color}`,background:s.bg}}>
-            <div style={{fontSize:14,color:"var(--text2)",marginBottom:8,fontWeight:600}}>{s.label}</div>
-            <div style={{fontSize:32,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}<span style={{fontSize:16,fontWeight:500,color:s.color,opacity:.7,marginLeft:3}}>{s.sub}</span></div>
+    <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,height:"100%",overflowY:"auto"}} className="fade">
+
+      {/* ── 상단: 요약 지표 ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+        {[
+          {label:"전체 진행률",val:`${totalProg*10}%`,icon:"📈",color:"#0D9488",bg:"linear-gradient(135deg,#0D9488,#0F766E)",sub:`${allTasks.length}개 작업`},
+          {label:"완료",val:completed,icon:"✅",color:"#059669",bg:"linear-gradient(135deg,#059669,#047857)",sub:`전체의 ${allTasks.length?Math.round(completed/allTasks.length*100):0}%`},
+          {label:"진행 중",val:inprog,icon:"⚡",color:"#2563EB",bg:"linear-gradient(135deg,#2563EB,#1D4ED8)",sub:"활성 작업"},
+          {label:"주의 필요",val:blocked+highPriCount,icon:"🔴",color:"#DC2626",bg:"linear-gradient(135deg,#DC2626,#B91C1C)",sub:`보류 ${blocked} · 고우선 ${highPriCount}`},
+        ].map((s,i)=>(
+          <div key={i} style={{...card,padding:"14px 16px",position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:0,right:0,width:60,height:60,borderRadius:"0 14px 0 60px",background:s.bg,opacity:.08}}/>
+            <div style={{fontSize:20,marginBottom:6}}>{s.icon}</div>
+            <div style={{fontSize:11,color:"var(--muted)",fontWeight:700,letterSpacing:".05em",textTransform:"uppercase",marginBottom:4}}>{s.label}</div>
+            <div style={{fontSize:28,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:"-.02em"}}>{s.val}</div>
+            <div style={{fontSize:11,color:"var(--muted)",marginTop:4}}>{s.sub}</div>
           </div>
         ))}
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-        {/* Phase progress */}
-        <div className="card" style={{padding:20}}>
-          <h3 style={{fontSize:17,fontWeight:700,marginBottom:16,color:"var(--text)"}}>Phase별 진행 현황</h3>
-          {roadmap.phases.map(phase=>{
-            const ft=phase.tasks.filter(t=>filterStatus==="all"||t.status===filterStatus);
-            const avg=ft.length?Math.round(ft.reduce((s,t)=>s+(t.progress||0),0)/ft.length):0;
-            const comp=ft.filter(t=>t.status==="completed").length;
-            return(
-              <div key={phase.id} onClick={()=>{setView("detail");setActivePhase(phase.id);}} style={{marginBottom:12,cursor:"pointer",padding:"10px 12px",borderRadius:8,transition:"background .15s"}} className="hov">
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                  <div style={{display:"flex",alignItems:"center",gap:7}}>
-                    <span style={{fontSize:14}}>{phase.icon}</span>
-                    <span style={{fontSize:14,fontWeight:600,color:phase.color}}>{phase.name}</span>
+      {/* ── 중단: Phase 현황 + 오른쪽 패널 ── */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 320px",gap:12,minHeight:0}}>
+
+        {/* Phase 진행 현황 */}
+        <div style={{...card,padding:"16px 18px",display:"flex",flexDirection:"column",gap:0}}>
+          <p style={sectionLabel}>Phase 진행 현황</p>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {roadmap.phases.map(phase=>{
+              const ft=phase.tasks;
+              const avg=ft.length?Math.round(ft.reduce((s,t)=>s+(t.progress||0),0)/ft.length):0;
+              const comp=ft.filter(t=>t.status==="completed").length;
+              const inp=ft.filter(t=>t.status==="in-progress").length;
+              const blk=ft.filter(t=>t.status==="blocked").length;
+              const pct=avg*10;
+              return(
+                <div key={phase.id} onClick={()=>{setView("detail");setActivePhase(phase.id);}}
+                  style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--border)",cursor:"pointer",transition:"all .18s",background:"white"}}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor=phase.color;e.currentTarget.style.background=phase.color+"08";e.currentTarget.style.transform="translateX(2px)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="white";e.currentTarget.style.transform="none";}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                    <div style={{width:28,height:28,borderRadius:7,background:phase.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{phase.icon}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:700,color:"var(--text)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{phase.name}</div>
+                      <div style={{fontSize:11,color:"var(--muted)"}}>{phase.period}</div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div style={{fontSize:17,fontWeight:800,color:getProgColor(avg),lineHeight:1}}>{pct}%</div>
+                      <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>완료 {comp}/{ft.length}</div>
+                    </div>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8,fontSize:15}}>
-                    <span style={{color:"var(--muted)"}}>✅ {comp}/{ft.length}</span>
-                    <span style={{fontWeight:700,color:getProgColor(avg)}}>{avg}/10</span>
+                  {/* 진행바 */}
+                  <div style={{height:5,background:"var(--border)",borderRadius:3,overflow:"hidden",marginBottom:5}}>
+                    <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${phase.color}99,${phase.color})`,borderRadius:3,transition:"width .5s"}}/>
+                  </div>
+                  {/* 상태 칩 */}
+                  <div style={{display:"flex",gap:4}}>
+                    {inp>0&&<span style={{fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:10,background:"#DBEAFE",color:"#1D4ED8"}}>진행 {inp}</span>}
+                    {comp>0&&<span style={{fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:10,background:"#D1FAE5",color:"#065F46"}}>완료 {comp}</span>}
+                    {blk>0&&<span style={{fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:10,background:"#FEE2E2",color:"#991B1B"}}>보류 {blk}</span>}
                   </div>
                 </div>
-                <div className="progress">
-                  <div className="progress-fill" style={{width:`${avg*10}%`,background:getProgColor(avg)}}/>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {/* Upcoming deadlines */}
-        <div className="card" style={{padding:20}}>
-          <h3 style={{fontSize:17,fontWeight:700,marginBottom:16}}>⏰ 임박한 기한 (14일 이내)</h3>
-          {upcoming.length===0?(
-            <div style={{textAlign:"center",padding:"30px 0",color:"var(--muted)",fontSize:15}}>임박한 기한이 없습니다</div>
-          ):upcoming.map(task=>{
-            const ph=roadmap.phases.find(p=>p.tasks.some(t=>t.id===task.id));
-            const daysLeft=Math.ceil((new Date(task.deadline)-new Date())/(1000*60*60*24));
-            return(
-              <div key={task.id} onClick={()=>{if(ph){setView("detail");setActivePhase(ph.id);}}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--border)",cursor:"pointer"}}>
-                <div>
-                  <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{task.title}</div>
-                  <div style={{fontSize:15,color:"var(--muted)",marginTop:2}}>👤 {task.assignee||"미배정"} · {ph?.name}</div>
+        {/* 오른쪽: 담당자 현황 + 진행 중 작업 */}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {/* 담당자별 현황 */}
+          <div style={{...card,padding:"14px 16px"}}>
+            <p style={sectionLabel}>담당자별 현황</p>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {assignees.map(([name,d])=>(
+                <div key={name}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <div style={{width:22,height:22,borderRadius:"50%",background:"linear-gradient(135deg,var(--teal),var(--blue))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:"white",flexShrink:0}}>{name[0]}</div>
+                      <span style={{fontSize:12,fontWeight:600,color:"var(--text)"}}>{name}</span>
+                    </div>
+                    <div style={{display:"flex",gap:4,fontSize:10}}>
+                      {d.inprog>0&&<span style={{background:"#DBEAFE",color:"#1D4ED8",padding:"1px 6px",borderRadius:8,fontWeight:700}}>진행 {d.inprog}</span>}
+                      {d.done>0&&<span style={{background:"#D1FAE5",color:"#065F46",padding:"1px 6px",borderRadius:8,fontWeight:700}}>완료 {d.done}</span>}
+                    </div>
+                  </div>
+                  <div style={{height:4,background:"var(--border)",borderRadius:2,overflow:"hidden"}}>
+                    <div style={{display:"flex",height:"100%"}}>
+                      <div style={{width:`${d.done/d.total*100}%`,background:"#10B981",transition:"width .5s"}}/>
+                      <div style={{width:`${d.inprog/d.total*100}%`,background:"#3B82F6",transition:"width .5s"}}/>
+                      <div style={{width:`${d.blocked/d.total*100}%`,background:"#EF4444",transition:"width .5s"}}/>
+                    </div>
+                  </div>
                 </div>
-                <span className="tag" style={{background:daysLeft<=3?"#FEF2F2":"#FFFBEB",color:daysLeft<=3?"#DC2626":"#D97706",flexShrink:0}}>{daysLeft}일</span>
+              ))}
+            </div>
+          </div>
+
+          {/* 진행 중인 작업 */}
+          <div style={{...card,padding:"14px 16px",flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <p style={sectionLabel}>지금 진행 중 ({inprog})</p>
+            {inProgTasks.length===0?(
+              <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--muted)",fontSize:12,textAlign:"center",padding:16}}>진행 중인 작업이 없습니다</div>
+            ):(
+              <div style={{display:"flex",flexDirection:"column",gap:6,overflowY:"auto"}}>
+                {inProgTasks.map(task=>{
+                  const ph=roadmap.phases.find(p=>p.tasks.some(t=>t.id===task.id));
+                  return(
+                    <div key={task.id} onClick={()=>{if(ph){setView("detail");setActivePhase(ph.id);}}}
+                      style={{padding:"8px 10px",borderRadius:8,border:`1px solid ${ph?.color||"var(--border)"}25`,background:ph?.color+"06",cursor:"pointer",transition:"all .15s"}}
+                      onMouseEnter={e=>{e.currentTarget.style.background=ph?.color+"12";}}
+                      onMouseLeave={e=>{e.currentTarget.style.background=ph?.color+"06";}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"var(--text)",marginBottom:3,lineHeight:1.3}}>{task.title}</div>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <span style={{fontSize:10,color:"var(--muted)"}}>{task.assignee||"미배정"} · {ph?.name}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:4}}>
+                          <div style={{width:40,height:3,background:"var(--border)",borderRadius:2,overflow:"hidden"}}>
+                            <div style={{height:"100%",width:`${task.progress*10}%`,background:ph?.color||"var(--teal)",borderRadius:2}}/>
+                          </div>
+                          <span style={{fontSize:10,fontWeight:700,color:ph?.color||"var(--teal)"}}>{task.progress*10}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* High priority tasks */}
-      <div className="card" style={{padding:20}}>
-        <h3 style={{fontSize:17,fontWeight:700,marginBottom:14}}>🔴 높은 우선순위 작업</h3>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
-          {highPri.map(task=>{
-            const ph=roadmap.phases.find(p=>p.tasks.some(t=>t.id===task.id));
-            const sc=STATUS[task.status];
-            return(
-              <div key={task.id} onClick={()=>{if(ph){setView("detail");setActivePhase(ph.id);}}} className="hov" style={{padding:"12px 14px",borderRadius:8,background:ph?.color+"08",border:`1px solid ${ph?.color}20`,cursor:"pointer"}}>
-                <div style={{fontSize:14,fontWeight:700,color:ph?.color,marginBottom:4}}>{ph?.icon} {task.title}</div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:15,color:"var(--muted)"}}>
-                  <span>👤 {task.assignee||"미배정"} · {task.progress}/10점</span>
-                  <span className="tag" style={{background:sc.bg,color:sc.text}}>{sc.label}</span>
+      {/* ── 하단: 높은 우선순위 작업 ── */}
+      {highPri.length>0&&(
+        <div style={{...card,padding:"14px 16px"}}>
+          <p style={sectionLabel}>높은 우선순위 — 미완료 ({highPri.length})</p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:8}}>
+            {highPri.map(task=>{
+              const ph=roadmap.phases.find(p=>p.tasks.some(t=>t.id===task.id));
+              const sc=STATUS[task.status];
+              return(
+                <div key={task.id} onClick={()=>{if(ph){setView("detail");setActivePhase(ph.id);}}}
+                  style={{padding:"10px 12px",borderRadius:10,background:"white",border:"1px solid var(--border)",cursor:"pointer",transition:"all .18s",borderLeft:`3px solid ${ph?.color||"var(--teal)"}`}}
+                  onMouseEnter={e=>{e.currentTarget.style.boxShadow="var(--shadow)";e.currentTarget.style.transform="translateY(-1px)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.boxShadow="none";e.currentTarget.style.transform="none";}}>
+                  <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8,marginBottom:5}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"var(--text)",lineHeight:1.3,flex:1}}>{task.title}</div>
+                    <span style={{fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:10,background:sc.bg,color:sc.text,flexShrink:0,whiteSpace:"nowrap"}}>{sc.label}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:10,color:"var(--muted)"}}>{ph?.icon} {ph?.name} · {task.assignee||"미배정"}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:4}}>
+                      <div style={{width:36,height:3,background:"var(--border)",borderRadius:2,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${task.progress*10}%`,background:ph?.color||"var(--teal)",borderRadius:2}}/>
+                      </div>
+                      <span style={{fontSize:10,fontWeight:700,color:ph?.color||"var(--teal)"}}>{task.progress*10}%</span>
+                    </div>
+                  </div>
+                  {task.kpi&&<div style={{fontSize:10,color:ph?.color,marginTop:4,fontWeight:600,opacity:.8}}>🎯 {task.kpi}</div>}
                 </div>
-                {task.kpi&&<div style={{fontSize:15,color:ph?.color,marginTop:4,fontWeight:600}}>🎯 {task.kpi}</div>}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuadY 사업화 로드맵 | TexCore Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F2F7;
+  --surface:#FFFFFF;
+  --surface2:#F8FAFC;
+  --border:#E2E8F0;
+  --border2:#CBD5E1;
+  --text:#0F172A;
+  --text2:#475569;
+  --muted:#94A3B8;
+  --teal:#0D9488;
+  --teal-light:#CCFBF1;
+  --teal-dark:#0F766E;
+  --navy:#0F172A;
+  --blue:#2563EB;
+  --purple:#7C3AED;
+  --amber:#D97706;
+  --rose:#BE185D;
+  --red:#DC2626;
+  --green:#059669;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
+  --r:10px;--r-sm:6px;--r-lg:16px;--r-xl:20px;
+}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;line-height:1.7}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fade{animation:fadeIn .25s ease}
+.slide{animation:slideRight .25s ease}
+input,select,textarea{font-family:inherit;font-size:15px}
+button{font-family:inherit;cursor:pointer}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.hov{transition:all .18s ease;cursor:pointer}
+.hov:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--border2)}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.inp{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:15px;outline:none;transition:border .15s;background:white;color:var(--text)}
+.inp:focus{border-color:var(--teal)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--r-sm);border:none;font-size:14px;font-weight:600;transition:all .15s;letter-spacing:.01em}
+.btn-teal{background:var(--teal);color:white;box-shadow:0 2px 8px rgba(13,148,136,.25)}
+.btn-teal:hover{background:var(--teal-dark);box-shadow:0 4px 14px rgba(13,148,136,.35)}
+.btn-ghost{background:transparent;color:var(--text2)}
+.btn-ghost:hover{background:var(--surface2)}
+.btn-outline{background:white;color:var(--text2);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
+.progress{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);animation:fadeIn .15s ease}
+.modal-box{background:white;border-radius:var(--r-xl);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);animation:fadeIn .2s ease}
+.lbl{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useMemo,useCallback,useRef}=React;
+
+/* ─── CONFIG ─── */
+const STATUS={
+  "not-started":{label:"시작 전",bg:"#F1F5F9",text:"#64748B",dot:"#CBD5E1"},
+  "in-progress":{label:"진행 중",bg:"#DBEAFE",text:"#1D4ED8",dot:"#3B82F6"},
+  "completed":{label:"완료",bg:"#D1FAE5",text:"#065F46",dot:"#10B981"},
+  "blocked":{label:"보류",bg:"#FEE2E2",text:"#991B1B",dot:"#EF4444"},
+};
+const PRIORITY={
+  "high":{label:"높음",color:"#DC2626",bg:"#FEF2F2"},
+  "medium":{label:"중간",color:"#D97706",bg:"#FFFBEB"},
+  "low":{label:"낮음",color:"#64748B",bg:"#F8FAFC"},
+};
+const PHASE_COLORS=["#0D9488","#2563EB","#7C3AED","#D97706","#BE185D","#DC2626"];
+const PHASE_ICONS=["🏗️","🔬","🎯","🚀","🌍","💎"];
+const ZOOMS={
+  month:{label:"월",col:68,group:1,hdr:(i)=>`${i+1}M`},
+  quarter:{label:"분기",col:50,group:3,hdr:(i)=>`Q${Math.floor(i/3)+1}`},
+  half:{label:"반기",col:42,group:6,hdr:(i)=>`${Math.floor(i/6)+1}H`},
+  year:{label:"연",col:34,group:12,hdr:(i)=>`${Math.floor(i/12)+1}Y`},
+};
+
+/* ─── DATA ─── */
+const INIT={
+  title:"QuadY 사업화 로드맵",
+  subtitle:"TexCore 프로그램 선정팀 · 상호인지 AI 디지털 트윈 멘토링 플랫폼",
+  vision:"2028년까지 글로벌 AI 에듀테크 선도 기업으로 도약",
+  lastUpdated:new Date().toISOString().split("T")[0],
+  kpis:[
+    {id:"k1",label:"누적 사용자(MAU)",current:0,target:100000,unit:"명",icon:"👥"},
+    {id:"k2",label:"월 반복 매출(MRR)",current:0,target:500000000,unit:"원",icon:"💰"},
+    {id:"k3",label:"B2G/B2B 계약",current:2,target:50,unit:"건",icon:"📋"},
+    {id:"k4",label:"고객 NPS",current:0,target:75,unit:"점",icon:"⭐"},
+    {id:"k5",label:"누적 투자 유치",current:0,target:5000000000,unit:"원",icon:"📈"},
+  ],
+  phases:[
+    {
+      id:"ph1",name:"팀 빌딩 & 기반 구축",period:"1~2개월차",
+      startMonth:1,endMonth:2,color:"#0D9488",icon:"🏗️",
+      objective:"핵심 팀 구성 및 법적·기술적 사업 기반 완성",
+      milestone:"5인 팀 구성 · 법인 정비 · 특허 2건 출원",
+      tasks:[
+        {id:"t1-1",title:"핵심 팀 구성 및 역할 정의",status:"in-progress",progress:6,priority:"high",
+         assignee:"종훈",startMonth:1,endMonth:1,deadline:"2026-04-30",
+         kpi:"5인 핵심팀 구성 완료",
+         details:["CEO(교수/LG출신): 기술총괄 & 학술연계","COO(종훈): 사업화전략, 교육현장연결, BD","CTO/개발파트너(아고라스): MVP개발 & 기술아키텍처","부족역량 파악: AI/ML엔지니어, UX디자이너, 마케터","텍스코어 팀멤버 온보딩 & 역할분담표 작성"],
+         checklist:[{id:"c1",text:"팀 구성원 선정",done:true},{id:"c2",text:"역할 정의서 작성",done:true},{id:"c3",text:"온보딩 진행",done:false},{id:"c4",text:"팀 OKR 설정",done:false}],
+         comments:[{id:"cm1",author:"CEO",text:"팀 빌딩 순조롭게 진행 중",ts:"2026-04-10"}],deps:[]},
+        {id:"t1-2",title:"법인/조직 체계 정비",status:"not-started",progress:2,priority:"high",
+         assignee:"교수",startMonth:1,endMonth:2,deadline:"2026-05-15",
+         kpi:"법인 정비 완료 + 계약서 체결",
+         details:["태양코어(주)/학습성격교육협회 법인구조 점검","QuadY 브랜드 상표 출원(국내/해외)","주주간 계약서(SHA) 정비","아고라스 개발계약 조건 재검토(IP귀속, 마일스톤)","스톡옵션/지분구조 설계"],
+         checklist:[{id:"c5",text:"법인 등록",done:false},{id:"c6",text:"SHA 계약서 작성",done:false},{id:"c7",text:"상표 출원",done:false}],
+         comments:[],deps:["t1-1"]},
+        {id:"t1-3",title:"IP 포트폴리오 강화",status:"in-progress",progress:4,priority:"medium",
+         assignee:"교수",startMonth:1,endMonth:2,deadline:"2026-05-30",
+         kpi:"특허 2건 출원 + 기술문서 완성",
+         details:["Dyadic Transformer 특허 해외출원 검토(PCT)","알고리즘 특허 등록 진행","4축 인지구조 진단시스템 추가 특허 검토","18-Key RAG 엔진 기술문서화","NC State EDI ILS 라이선스 갱신 및 확장 협의"],
+         checklist:[{id:"c8",text:"특허 출원서 작성",done:true},{id:"c9",text:"PCT 해외출원 검토",done:false},{id:"c10",text:"기술문서 완성",done:false}],
+         comments:[],deps:[]},
+        {id:"t1-4",title:"시장 가설 수립 & 검증 설계",status:"not-started",progress:1,priority:"medium",
+         assignee:"종훈",startMonth:2,endMonth:2,deadline:"2026-05-30",
+         kpi:"핵심 가설 3개 + 검증 프로토콜 완성",
+         details:["핵심 가설 3가지 정의","고객 세그먼트 구체화: B2C, B2G, B2B","검증 실험 설계(A/B테스트, 인터뷰 프로토콜)","기존 3만건 코칭데이터 기반 벤치마크 설정","텍스코어 가설검증 프레임워크 적용"],
+         checklist:[{id:"c11",text:"가설 정의 완료",done:false},{id:"c12",text:"검증 프로토콜 작성",done:false}],
+         comments:[],deps:["t1-1"]},
+        {id:"t1-5",title:"초기 운영 자금 계획 수립",status:"not-started",progress:0,priority:"high",
+         assignee:"교수",startMonth:1,endMonth:2,deadline:"2026-05-15",
+         kpi:"12개월 런웨이 확보 계획",
+         details:["텍스코어 지원금 활용 계획","정부 R&D 과제 신청 목록 작성","엔젤 투자자 1-2명 접촉","운영비 월별 버짓 계획","긴급 자금조달 시나리오 수립"],
+         checklist:[{id:"c13",text:"버짓 계획 수립",done:false},{id:"c14",text:"정부과제 신청 목록",done:false}],
+         comments:[],deps:["t1-1"]},
+      ]
+    },
+    {
+      id:"ph2",name:"MVP 고도화 & 가설 검증",period:"3~5개월차",
+      startMonth:3,endMonth:5,color:"#2563EB",icon:"🔬",
+      objective:"시장 적합성 검증 및 핵심 기능 MVP 완성",
+      milestone:"파일럿 50명 · 고객인터뷰 50건 · PMF 신호 확인",
+      tasks:[
+        {id:"t2-1",title:"MVP 핵심 기능 개발",status:"not-started",progress:0,priority:"high",
+         assignee:"아고라스",startMonth:3,endMonth:4,deadline:"2026-06-30",
+         kpi:"4축 진단 + RAG엔진 + 대시보드 완성",
+         details:["4축 인지구조 진단 모듈 고도화","18-Key RAG 엔진 프로토타입 구현","Dyadic Transformer 기반 디지털트윈 멘토 PoC","학습자 대시보드(진단결과 + 맞춤학습경로)","멘토 매칭 알고리즘 v1"],
+         checklist:[{id:"c15",text:"진단 모듈 완성",done:false},{id:"c16",text:"RAG 엔진 PoC",done:false},{id:"c17",text:"대시보드 완성",done:false}],
+         comments:[],deps:["t1-1","t1-3"]},
+        {id:"t2-2",title:"고객 발견(Customer Discovery)",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:3,endMonth:5,deadline:"2026-07-31",
+         kpi:"인터뷰 50건 + PMF 지표 정의",
+         details:["학부모 심층 인터뷰 30건","교사/교육청 담당자 인터뷰 15건","학생 사용성 테스트 50명","경쟁사 분석 보고서","PMF 지표 정의 및 측정 체계"],
+         checklist:[{id:"c18",text:"인터뷰 30건 완료",done:false},{id:"c19",text:"경쟁사 분석",done:false},{id:"c20",text:"PMF 지표 확정",done:false}],
+         comments:[],deps:["t1-1"]},
+        {id:"t2-3",title:"파일럿 프로그램 운영",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:4,endMonth:5,deadline:"2026-08-31",
+         kpi:"얼리어답터 5곳 + 데이터 수집 완료",
+         details:["지자체 멘토링 1개 지역 MVP 적용","학교 캠프 2~3곳 디지털트윈 시범 운영","얼리어답터 5곳 선정 및 계약","파일럿 데이터 수집 체계 구축","Go/No-Go 메트릭스 설정 및 평가"],
+         checklist:[{id:"c21",text:"파일럿 지역 선정",done:false},{id:"c22",text:"MOU/계약 체결",done:false},{id:"c23",text:"데이터 수집 완료",done:false}],
+         comments:[],deps:["t2-1","t2-2"]},
+        {id:"t2-4",title:"데이터 파이프라인 구축",status:"not-started",progress:0,priority:"medium",
+         assignee:"아고라스",startMonth:3,endMonth:4,deadline:"2026-06-30",
+         kpi:"실시간 학습로그 수집 파이프라인 완성",
+         details:["Supabase 기반 데이터 인프라 설계","학습로그 수집 & 분석 파이프라인","진단→학습경로 추천 자동화 로직","개인정보 보호 체계 수립(PIPA 준수)","n8n 자동화 워크플로우 연동"],
+         checklist:[{id:"c24",text:"인프라 설계 완료",done:false},{id:"c25",text:"파이프라인 테스트",done:false}],
+         comments:[],deps:["t2-1"]},
+      ]
+    },
+    {
+      id:"ph3",name:"PMF 확보 & 초기 매출",period:"6~9개월차",
+      startMonth:6,endMonth:9,color:"#7C3AED",icon:"🎯",
+      objective:"Product-Market Fit 확보 및 첫 유료 매출 창출",
+      milestone:"유료고객 20개 · MRR 1,000만원 · 시드 투자 클로징",
+      tasks:[
+        {id:"t3-1",title:"제품 고도화 v2.0",status:"not-started",progress:0,priority:"high",
+         assignee:"아고라스",startMonth:6,endMonth:7,deadline:"2026-09-30",
+         kpi:"UX 개선 + 성능 30% 향상",
+         details:["UX/UI 전면 리디자인(얼리어답터 피드백 반영)","Dyadic Transformer 성능 최적화","멀티모달 학습 콘텐츠 지원","학부모용 리포트 자동 생성","멘토 교육 콘텐츠 자동 큐레이션"],
+         checklist:[{id:"c26",text:"UI 리디자인 완료",done:false},{id:"c27",text:"성능 테스트",done:false},{id:"c28",text:"QA 완료",done:false}],
+         comments:[],deps:["t2-1","t2-3"]},
+        {id:"t3-2",title:"비즈니스 모델 확정",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:6,endMonth:7,deadline:"2026-09-15",
+         kpi:"3개 수익모델 확정 + 가격 검증",
+         details:["B2C 학부모 구독 모델(월 2.9~9.9만원)","B2G 지자체/교육청 연간 계약(1억~5억)","B2B API 라이선스(SaaS)","가격 민감도 테스트","유닛 이코노믹스(LTV/CAC) 검증"],
+         checklist:[{id:"c29",text:"가격 책정 완료",done:false},{id:"c30",text:"계약서 템플릿",done:false}],
+         comments:[],deps:["t2-2"]},
+        {id:"t3-3",title:"마케팅 & 세일즈 체계",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:7,endMonth:9,deadline:"2026-10-31",
+         kpi:"유료고객 20개 + MRR 1,000만원",
+         details:["콘텐츠 마케팅(브랜드 자산 활용)","학부모 커뮤니티 타겟 마케팅","교육청/지자체 영업 프로세스 체계화","레퍼런스 사례 3건 확보","크로스 프로모션 채널 개발"],
+         checklist:[{id:"c31",text:"마케팅 전략 수립",done:false},{id:"c32",text:"세일즈 프로세스",done:false},{id:"c33",text:"레퍼런스 3건",done:false}],
+         comments:[],deps:["t3-2"]},
+        {id:"t3-4",title:"시드 투자 유치",status:"not-started",progress:0,priority:"high",
+         assignee:"교수",startMonth:8,endMonth:9,deadline:"2026-10-31",
+         kpi:"시드라운드 3~5억 클로징",
+         details:["시드 라운드 전략 수립(목표 3~5억)","IR 자료 제작(Deck + One-pager)","타겟 VC/엔젤 리스트 30개","TIPS 프로그램 신청","특허 기반 기술가치 평가서"],
+         checklist:[{id:"c34",text:"IR Deck 완성",done:false},{id:"c35",text:"TIPS 신청",done:false},{id:"c36",text:"투자자 미팅 10건",done:false}],
+         comments:[],deps:["t3-1","t3-2"]},
+      ]
+    },
+    {
+      id:"ph4",name:"스케일업 & 시장 확대",period:"10~15개월차",
+      startMonth:10,endMonth:15,color:"#D97706",icon:"🚀",
+      objective:"검증된 모델 기반 고속 성장 및 조직 스케일업",
+      milestone:"팀 15명 · B2G 10건 · MRR 5,000만원 · Pre-A 완료",
+      tasks:[
+        {id:"t4-1",title:"제품 v3.0 출시",status:"not-started",progress:0,priority:"high",
+         assignee:"아고라스",startMonth:10,endMonth:12,deadline:"2026-12-31",
+         kpi:"DAU 5,000명 + 리텐션 60%",
+         details:["완전 자율 AI 멘토링 v3.0","실시간 학습 분석 대시보드","학교 LMS 연동(에듀넷, 구글 클래스룸)","모바일 앱(iOS/Android) 출시","API 파트너 포털 오픈"],
+         checklist:[{id:"c37",text:"모바일 앱 출시",done:false},{id:"c38",text:"LMS 연동",done:false},{id:"c39",text:"API 포털",done:false}],
+         comments:[],deps:["t3-1"]},
+        {id:"t4-2",title:"조직 확대 & 팀 빌딩",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:10,endMonth:13,deadline:"2027-01-31",
+         kpi:"핵심 인력 15명 채용",
+         details:["세일즈 팀 4명 채용","AI/ML 엔지니어 3명 채용","UX 디자이너 2명 채용","고객 성공(CS) 팀 2명","마케팅 매니저 1명"],
+         checklist:[{id:"c40",text:"채용 프로세스 구축",done:false},{id:"c41",text:"HR 시스템 도입",done:false},{id:"c42",text:"15명 채용 완료",done:false}],
+         comments:[],deps:["t3-4"]},
+        {id:"t4-3",title:"B2G 계약 10건 달성",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:11,endMonth:15,deadline:"2027-03-31",
+         kpi:"지자체/교육청 10개 기관 계약",
+         details:["교육청 영업 전략 고도화","지자체 멘토링 사업 연계 제안","교육부 사업 참여 검토","정부 입찰 프로세스 구축","레퍼런스 기반 확장 영업"],
+         checklist:[{id:"c43",text:"교육청 5건",done:false},{id:"c44",text:"지자체 5건",done:false}],
+         comments:[],deps:["t3-3"]},
+        {id:"t4-4",title:"AI 엔진 고도화 & 특허 확대",status:"not-started",progress:0,priority:"medium",
+         assignee:"교수",startMonth:10,endMonth:14,deadline:"2027-02-28",
+         kpi:"특허 5건 추가 + 논문 2편",
+         details:["Dyadic Transformer v2 연구 논문 발표","4축 인지구조 국제 표준화 추진","미국/유럽 특허 3건 추가 출원","NC State 공동 연구 프로그램 확대","국제 학술 컨퍼런스 발표(2회)"],
+         checklist:[{id:"c45",text:"논문 2편 제출",done:false},{id:"c46",text:"해외 특허 3건",done:false}],
+         comments:[],deps:["t1-3"]},
+        {id:"t4-5",title:"Pre-A 라운드 클로징",status:"not-started",progress:0,priority:"high",
+         assignee:"교수",startMonth:13,endMonth:15,deadline:"2027-03-31",
+         kpi:"Pre-A 10~20억 유치",
+         details:["Pre-A 라운드 10~20억 목표","국내 주요 VC 10곳 미팅","해외 VC 초기 접촉(미국 에듀테크 전문)","기업가치 평가 및 협상","투자 후 이사회 구성"],
+         checklist:[{id:"c47",text:"VC 10곳 미팅",done:false},{id:"c48",text:"텀시트 협상",done:false},{id:"c49",text:"Pre-A 클로징",done:false}],
+         comments:[],deps:["t3-4"]},
+        {id:"t4-6",title:"운영 자동화 & 인프라 강화",status:"not-started",progress:0,priority:"medium",
+         assignee:"아고라스",startMonth:10,endMonth:13,deadline:"2027-01-31",
+         kpi:"운영비 30% 절감 + 시스템 가동률 99.9%",
+         details:["고객 온보딩 자동화 파이프라인","청구 & 결제 시스템 고도화","AWS/GCP 클라우드 인프라 최적화","DevOps CI/CD 파이프라인","보안 인증(ISO27001) 취득 준비"],
+         checklist:[{id:"c50",text:"온보딩 자동화",done:false},{id:"c51",text:"결제 시스템",done:false},{id:"c52",text:"보안 인증 준비",done:false}],
+         comments:[],deps:["t2-4"]},
+      ]
+    },
+    {
+      id:"ph5",name:"글로벌 진출 & 파트너십",period:"16~20개월차",
+      startMonth:16,endMonth:20,color:"#BE185D",icon:"🌍",
+      objective:"해외 시장 진입 및 글로벌 전략 파트너십 구축",
+      milestone:"해외법인 설립 · 글로벌 파트너 10개사 · 다국어 출시",
+      tasks:[
+        {id:"t5-1",title:"해외 시장 진출 전략 수립",status:"not-started",progress:0,priority:"high",
+         assignee:"교수",startMonth:16,endMonth:17,deadline:"2027-07-31",
+         kpi:"1차 진출 국가 2개 확정",
+         details:["미국 에듀테크 시장 심층 분석","동남아(싱가포르/베트남) 시장 조사","일본/대만 교육 시장 탐색","진출 우선순위 국가 선정","현지 파트너 발굴 전략"],
+         checklist:[{id:"c53",text:"시장 조사 완료",done:false},{id:"c54",text:"진출 국가 확정",done:false}],
+         comments:[],deps:["t4-1"]},
+        {id:"t5-2",title:"해외 법인 설립",status:"not-started",progress:0,priority:"high",
+         assignee:"교수",startMonth:17,endMonth:19,deadline:"2027-09-30",
+         kpi:"미국(델라웨어) + 싱가포르 법인",
+         details:["미국 델라웨어 법인 설립","싱가포르 법인 설립(동남아 허브)","현지 법무/세무 체계 구축","글로벌 HR 정책 수립","해외 은행 계좌 및 결제 인프라"],
+         checklist:[{id:"c55",text:"미국 법인 설립",done:false},{id:"c56",text:"싱가포르 법인",done:false},{id:"c57",text:"법무 체계 완성",done:false}],
+         comments:[],deps:["t5-1"]},
+        {id:"t5-3",title:"글로벌 파트너십 10개사 체결",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:16,endMonth:20,deadline:"2027-10-31",
+         kpi:"글로벌 파트너 10개사 MOU/계약",
+         details:["미국 학구/교육청 3곳 MOU","글로벌 에듀테크 기업 파트너 5곳","싱가포르 교육부 협력 검토","NC State 글로벌 확장 협력","IB스쿨 네트워크 파트너십"],
+         checklist:[{id:"c58",text:"미국 MOU 3건",done:false},{id:"c59",text:"에듀테크 파트너 5건",done:false}],
+         comments:[],deps:["t5-1"]},
+        {id:"t5-4",title:"다국어 플랫폼 출시(한/영/중)",status:"not-started",progress:0,priority:"high",
+         assignee:"아고라스",startMonth:17,endMonth:19,deadline:"2027-09-30",
+         kpi:"영문/중문 플랫폼 출시",
+         details:["플랫폼 다국어(i18n) 아키텍처","영문 버전 완성 및 테스트","중문 간체 버전 개발","현지화(Localization) QA","글로벌 CDN 인프라 구축"],
+         checklist:[{id:"c60",text:"영문 버전 출시",done:false},{id:"c61",text:"중문 버전 출시",done:false}],
+         comments:[],deps:["t4-1"]},
+        {id:"t5-5",title:"글로벌 컨퍼런스 & 브랜딩",status:"not-started",progress:0,priority:"medium",
+         assignee:"종훈",startMonth:17,endMonth:20,deadline:"2027-10-31",
+         kpi:"글로벌 컨퍼런스 3회 발표",
+         details:["SXSW EDU 2027 발표","ASU+GSV Summit 참가","EdTechAsia 싱가포르 전시","글로벌 미디어 홍보(TechCrunch 등)","해외 어워드 수상 전략"],
+         checklist:[{id:"c62",text:"SXSW EDU 참가",done:false},{id:"c63",text:"ASU+GSV 발표",done:false}],
+         comments:[],deps:["t5-3"]},
+      ]
+    },
+    {
+      id:"ph6",name:"시리즈 A & 글로벌 도약",period:"21~24개월차",
+      startMonth:21,endMonth:24,color:"#DC2626",icon:"💎",
+      objective:"시리즈 A 유치 및 글로벌 시장 본격 도약 · IPO 준비",
+      milestone:"시리즈 A 30-50억 · 연매출 50억 · 글로벌 MAU 10만",
+      tasks:[
+        {id:"t6-1",title:"시리즈 A 투자 유치(30~50억)",status:"not-started",progress:0,priority:"high",
+         assignee:"교수",startMonth:21,endMonth:23,deadline:"2027-12-31",
+         kpi:"시리즈 A 30~50억 클로징",
+         details:["시리즈 A 30~50억 목표","국내 대형 VC 5곳(DSC, 소프트뱅크벤처스, 카카오벤처스 등)","미국 에듀테크 전문 VC(Owl Ventures, Learn Capital)","기업가치 300~500억 목표","글로벌 전략적 투자자 유치"],
+         checklist:[{id:"c64",text:"IR Deck v3 완성",done:false},{id:"c65",text:"VC 로드쇼",done:false},{id:"c66",text:"시리즈 A 클로징",done:false}],
+         comments:[],deps:["t4-5","t5-3"]},
+        {id:"t6-2",title:"플랫폼 v4.0 완전 자율 AI 멘토",status:"not-started",progress:0,priority:"high",
+         assignee:"아고라스",startMonth:21,endMonth:23,deadline:"2027-12-31",
+         kpi:"AI 자율도 95% + 정확도 90%",
+         details:["완전 자율 AI 멘토(Human-in-the-loop 최소화)","실시간 감정/인지 상태 분석","개인화 수준 세계 최고 수준 달성","B2B Enterprise 버전 출시","API-first 아키텍처 완성"],
+         checklist:[{id:"c67",text:"v4.0 개발 완료",done:false},{id:"c68",text:"Enterprise 버전",done:false}],
+         comments:[],deps:["t4-1","t5-4"]},
+        {id:"t6-3",title:"미국 시장 본격 공략",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:22,endMonth:24,deadline:"2028-02-28",
+         kpi:"미국 학구 10곳 + MAU 5만명",
+         details:["미국 학구(School District) 10곳 계약","미국 현지 세일즈 팀 구성(5명)","K-12 교육시장 마케팅 캠페인","EdTech 투자자 네트워크 활용","연방/주 교육 보조금 신청"],
+         checklist:[{id:"c69",text:"미국 학구 10건",done:false},{id:"c70",text:"현지 팀 구성",done:false}],
+         comments:[],deps:["t5-2","t6-2"]},
+        {id:"t6-4",title:"연매출 50억 달성",status:"not-started",progress:0,priority:"high",
+         assignee:"종훈",startMonth:21,endMonth:24,deadline:"2028-03-31",
+         kpi:"ARR 50억원 달성",
+         details:["국내 MRR 3억 + 해외 MRR 1억 목표","B2G 20개 기관 연간 계약","B2C 구독자 1만명 돌파","B2B API 라이선스 10건","NPS 75점 이상 유지"],
+         checklist:[{id:"c71",text:"MRR 4억 달성",done:false},{id:"c72",text:"ARR 50억 달성",done:false}],
+         comments:[],deps:["t5-3","t6-3"]},
+        {id:"t6-5",title:"IPO 준비 & 시리즈 B 로드맵",status:"not-started",progress:0,priority:"medium",
+         assignee:"교수",startMonth:23,endMonth:24,deadline:"2028-03-31",
+         kpi:"IPO 준비 착수 + 시리즈 B 전략 확정",
+         details:["코스닥/나스닥 IPO 타임라인 수립","재무 감사 체계 구축(Big4)","ESG 경영 체계 도입","시리즈 B 100~200억 로드맵","글로벌 CFO 영입"],
+         checklist:[{id:"c73",text:"IPO 타임라인",done:false},{id:"c74",text:"Big4 감사 계약",done:false}],
+         comments:[],deps:["t6-1","t6-4"]},
+      ]
+    },
+  ]
+};
+
+/* ─── HELPERS ─── */
+const fmt=(n,u)=>{
+  if(u==="원"){
+    if(n>=100000000)return(n/100000000).toFixed(1)+"억원";
+    if(n>=10000)return(n/10000).toFixed(0)+"만원";
+    return n.toLocaleString()+"원";
+  }
+  if(n>=10000)return(n/10000).toFixed(1)+"만"+u;
+  return n.toLocaleString()+u;
+};
+const pct=(c,t)=>t?Math.min(100,Math.round((c/t)*100)):0;
+const getProgColor=(p)=>p>=8?"#059669":p>=5?"#D97706":p>=3?"#F97316":"#DC2626";
+
+/* ─── MODAL ─── */
+function Modal({children,onClose}){
+  useEffect(()=>{document.body.style.overflow="hidden";return()=>{document.body.style.overflow=""}},[]);
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal-box" onClick={e=>e.stopPropagation()}>{children}</div>
+    </div>
+  );
+}
+
+/* ─── TASK MODAL ─── */
+function TaskModal({task,phase,phases,onSave,onMove,onDelete,onClose}){
+  const[t,setT]=useState({...task});
+  const[newDetail,setNewDetail]=useState("");
+  const[newCheck,setNewCheck]=useState("");
+  const[newComment,setNewComment]=useState("");
+  const u=(k,v)=>setT(p=>({...p,[k]:v}));
+  const sc=STATUS[t.status];
+  return(
+    <Modal onClose={onClose}>
+      <div style={{padding:28}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>{phase.icon}</span>
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:phase.color,textTransform:"uppercase",letterSpacing:".06em"}}>{phase.name}</div>
+              <div style={{fontSize:18,fontWeight:700,color:"var(--text)"}}>항목 편집</div>
+            </div>
+          </div>
+          <button onClick={onClose} className="btn btn-ghost" style={{padding:"6px 10px",fontSize:18}}>×</button>
+        </div>
+
+        <label className="lbl">제목</label>
+        <input value={t.title} onChange={e=>u("title",e.target.value)} className="inp" style={{marginBottom:14}}/>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <div><label className="lbl">시작 (개월차)</label><input type="number" min={1} max={24} value={t.startMonth} onChange={e=>u("startMonth",+e.target.value)} className="inp"/></div>
+          <div><label className="lbl">종료 (개월차)</label><input type="number" min={1} max={24} value={t.endMonth} onChange={e=>u("endMonth",+e.target.value)} className="inp"/></div>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label className="lbl">진행도 ({t.progress}/10)</label>
+          <input type="range" min={0} max={10} value={t.progress} onChange={e=>u("progress",+e.target.value)} style={{width:"100%",accentColor:phase.color}}/>
+          <div style={{height:4,background:"var(--border)",borderRadius:2,overflow:"hidden",marginTop:4}}>
+            <div style={{height:"100%",width:`${t.progress*10}%`,background:getProgColor(t.progress),borderRadius:2,transition:"width .3s"}}/>
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <div><label className="lbl">상태</label>
+            <select value={t.status} onChange={e=>u("status",e.target.value)} className="inp">
+              {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div><label className="lbl">우선순위</label>
+            <select value={t.priority} onChange={e=>u("priority",e.target.value)} className="inp">
+              {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <div><label className="lbl">담당자</label><input value={t.assignee} onChange={e=>u("assignee",e.target.value)} className="inp" placeholder="이름"/></div>
+          <div><label className="lbl">기한</label><input type="date" value={t.deadline} onChange={e=>u("deadline",e.target.value)} className="inp"/></div>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label className="lbl">KPI 목표</label>
+          <input value={t.kpi||""} onChange={e=>u("kpi",e.target.value)} className="inp" placeholder="예: 파일럿 5곳 완료"/>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label className="lbl">Phase 이동</label>
+          <select value={phase.id} onChange={e=>{onMove(task.id,phase.id,e.target.value);onClose();}} className="inp">
+            {phases.map(p=><option key={p.id} value={p.id}>{p.icon} {p.name}</option>)}
+          </select>
+        </div>
+
+        <label className="lbl" style={{marginTop:18}}>세부 항목</label>
+        {t.details.map((d,i)=>(
+          <div key={i} style={{display:"flex",gap:6,marginBottom:6}}>
+            <input value={d} onChange={e=>{const a=[...t.details];a[i]=e.target.value;u("details",a);}} className="inp" style={{flex:1}}/>
+            <button onClick={()=>u("details",t.details.filter((_,j)=>j!==i))} style={{background:"#FEE2E2",color:"#991B1B",border:"none",borderRadius:6,padding:"0 10px",cursor:"pointer"}}>×</button>
+          </div>
+        ))}
+        <div style={{display:"flex",gap:6,marginBottom:18}}>
+          <input value={newDetail} onChange={e=>setNewDetail(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&newDetail.trim()){u("details",[...t.details,newDetail.trim()]);setNewDetail("");}}} className="inp" style={{flex:1}} placeholder="새 세부 항목..."/>
+          <button onClick={()=>{if(newDetail.trim()){u("details",[...t.details,newDetail.trim()]);setNewDetail("");}}} className="btn btn-teal">+</button>
+        </div>
+
+        <label className="lbl">체크리스트</label>
+        {t.checklist.map((item,i)=>(
+          <div key={item.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,padding:"8px 10px",background:"#F8FAFC",borderRadius:6}}>
+            <input type="checkbox" checked={item.done} onChange={e=>{const a=[...t.checklist];a[i]={...a[i],done:e.target.checked};u("checklist",a);}} style={{accentColor:phase.color,width:15,height:15,cursor:"pointer"}}/>
+            <input value={item.text} onChange={e=>{const a=[...t.checklist];a[i]={...a[i],text:e.target.value};u("checklist",a);}} className="inp" style={{flex:1,background:"transparent",border:"none",padding:"0"}}/>
+            <button onClick={()=>u("checklist",t.checklist.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:16}}>×</button>
+          </div>
+        ))}
+        <div style={{display:"flex",gap:6,marginBottom:18}}>
+          <input value={newCheck} onChange={e=>setNewCheck(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&newCheck.trim()){u("checklist",[...t.checklist,{id:`cl-${Date.now()}`,text:newCheck.trim(),done:false}]);setNewCheck("");}}} className="inp" style={{flex:1}} placeholder="새 체크리스트..."/>
+          <button onClick={()=>{if(newCheck.trim()){u("checklist",[...t.checklist,{id:`cl-${Date.now()}`,text:newCheck.trim(),done:false}]);setNewCheck("");}}} className="btn btn-teal">+</button>
+        </div>
+
+        <label className="lbl">코멘트</label>
+        {t.comments.map(c=>(
+          <div key={c.id} style={{background:"#F8FAFC",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--text)",marginBottom:2}}>{c.author} <span style={{fontSize:15,color:"var(--muted)",fontWeight:400}}>{c.ts}</span></div>
+            <div style={{fontSize:15,color:"var(--text2)"}}>{c.text}</div>
+          </div>
+        ))}
+        <div style={{display:"flex",gap:6,marginBottom:20}}>
+          <input value={newComment} onChange={e=>setNewComment(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&newComment.trim()){u("comments",[...t.comments,{id:`c-${Date.now()}`,author:"나",text:newComment.trim(),ts:new Date().toISOString().split("T")[0]}]);setNewComment("");}}} className="inp" style={{flex:1}} placeholder="코멘트 추가..."/>
+          <button onClick={()=>{if(newComment.trim()){u("comments",[...t.comments,{id:`c-${Date.now()}`,author:"나",text:newComment.trim(),ts:new Date().toISOString().split("T")[0]}]);setNewComment("");}}} className="btn btn-teal">+</button>
+        </div>
+
+        <div style={{display:"flex",justifyContent:"space-between",paddingTop:16,borderTop:"1px solid var(--border)"}}>
+          <button onClick={()=>{onDelete(task.id,phase.id);onClose();}} className="btn" style={{background:"#FEF2F2",color:"#DC2626"}}>삭제</button>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={onClose} className="btn btn-outline">취소</button>
+            <button onClick={()=>{onSave(t,phase.id);onClose();}} className="btn btn-teal">저장</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ─── PHASE MODAL ─── */
+function PhaseModal({phase,onSave,onDelete,onClose,isNew}){
+  const[p,setP]=useState(phase||{id:`ph-${Date.now()}`,name:"",period:"1~3개월차",startMonth:1,endMonth:3,color:PHASE_COLORS[0],icon:"💡",objective:"",milestone:"",tasks:[]});
+  const u=(k,v)=>setP(prev=>({...prev,[k]:v}));
+  return(
+    <Modal onClose={onClose}>
+      <div style={{padding:24}}>
+        <h3 style={{margin:"0 0 18px",fontSize:16,fontWeight:700}}>{isNew?"새 Phase 추가":"Phase 편집"}</h3>
+        <label className="lbl">이름</label>
+        <input value={p.name} onChange={e=>u("name",e.target.value)} className="inp" placeholder="예: 시장 확대" style={{marginBottom:12}}/>
+        <label className="lbl">목표</label>
+        <input value={p.objective||""} onChange={e=>u("objective",e.target.value)} className="inp" placeholder="이 Phase의 핵심 목표" style={{marginBottom:12}}/>
+        <label className="lbl">마일스톤</label>
+        <input value={p.milestone||""} onChange={e=>u("milestone",e.target.value)} className="inp" placeholder="예: 계약 10건 · MRR 1억" style={{marginBottom:12}}/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <div><label className="lbl">시작 (개월차)</label><input type="number" min={1} max={24} value={p.startMonth} onChange={e=>u("startMonth",+e.target.value)} className="inp"/></div>
+          <div><label className="lbl">종료 (개월차)</label><input type="number" min={1} max={24} value={p.endMonth} onChange={e=>u("endMonth",+e.target.value)} className="inp"/></div>
+        </div>
+        <label className="lbl">아이콘</label>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+          {PHASE_ICONS.map(ic=><button key={ic} onClick={()=>u("icon",ic)} style={{width:38,height:38,borderRadius:8,border:p.icon===ic?"2px solid var(--text)":"1px solid var(--border)",background:p.icon===ic?"var(--surface2)":"white",fontSize:18,cursor:"pointer"}}>{ic}</button>)}
+        </div>
+        <label className="lbl">색상</label>
+        <div style={{display:"flex",gap:8,marginBottom:20}}>
+          {PHASE_COLORS.map(c=><button key={c} onClick={()=>u("color",c)} style={{width:28,height:28,borderRadius:"50%",border:p.color===c?"3px solid var(--text)":"2px solid transparent",background:c,cursor:"pointer"}}/>)}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",paddingTop:16,borderTop:"1px solid var(--border)"}}>
+          {!isNew?<button onClick={()=>{onDelete(phase.id);onClose();}} className="btn" style={{background:"#FEF2F2",color:"#DC2626"}}>삭제</button>:<div/>}
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={onClose} className="btn btn-outline">취소</button>
+            <button onClick={()=>{onSave(p);onClose();}} className="btn btn-teal" style={{background:p.color}}>{isNew?"추가":"저장"}</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ─── HEADER ─── */
+function Header({roadmap,totalProg,saving,onAddPhase,onOpenApiSettings}){
+  const allTasks=roadmap.phases.flatMap(p=>p.tasks);
+  const done=allTasks.filter(t=>t.status==="completed").length;
+  const inprog=allTasks.filter(t=>t.status==="in-progress").length;
+  const stats=[
+    {label:"총 Phase",val:roadmap.phases.length,unit:"개",color:"#A5F3FC"},
+    {label:"전체 작업",val:allTasks.length,unit:"건",color:"#BAE6FD"},
+    {label:"진행 중",val:inprog,unit:"건",color:"#FDE68A"},
+    {label:"완료",val:done,unit:"건",color:"#A7F3D0"},
+  ];
+  return(
+    <div style={{background:"linear-gradient(135deg,#0A0E27 0%,#0F2850 45%,#0D4A46 100%)",color:"white",padding:"36px 24px 28px",position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:-60,right:-60,width:300,height:300,borderRadius:"50%",background:"rgba(13,148,136,.08)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",bottom:-40,left:200,width:200,height:200,borderRadius:"50%",background:"rgba(37,99,235,.06)",pointerEvents:"none"}}/>
+      <div style={{maxWidth:1280,margin:"0 auto",position:"relative"}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <div style={{width:48,height:48,borderRadius:14,background:"linear-gradient(135deg,#0D9488,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,boxShadow:"0 4px 14px rgba(13,148,136,.4)"}}>Q</div>
+            <div>
+              <h1 style={{fontSize:26,fontWeight:800,letterSpacing:"-.02em",lineHeight:1.2}}>{roadmap.title}</h1>
+              <p style={{fontSize:14,opacity:.55,marginTop:4,letterSpacing:".01em"}}>{roadmap.subtitle}</p>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+            <button onClick={()=>window.print()} className="btn" style={{background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",fontSize:14}}>
+              🖨️ 인쇄
+            </button>
+            <button onClick={onOpenApiSettings} className="btn" style={{background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",fontSize:14}}>
+              🔑 AI API 키
+            </button>
+            <button onClick={onAddPhase} className="btn" style={{background:"rgba(255,255,255,.1)",color:"white",border:"1px solid rgba(255,255,255,.2)",fontSize:14}}>
+              + Phase 추가
+            </button>
+            <span style={{fontSize:15,opacity:.3}}>업데이트: {roadmap.lastUpdated}{saving?" · 저장 중…":""}</span>
+          </div>
+        </div>
+
+        <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"8px 14px",marginBottom:20,border:"1px solid rgba(255,255,255,.07)",fontSize:14,opacity:.75,fontStyle:"italic"}}>
+          🎯 {roadmap.vision}
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:22}}>
+          {stats.map((s,i)=>(
+            <div key={i} style={{background:"rgba(255,255,255,.05)",borderRadius:10,padding:"14px 16px",border:"1px solid rgba(255,255,255,.08)"}}>
+              <div style={{fontSize:15,opacity:.55,marginBottom:6}}>{s.label}</div>
+              <div style={{fontSize:28,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}<span style={{fontSize:15,fontWeight:500,opacity:.7,marginLeft:3}}>{s.unit}</span></div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:15,opacity:.5,marginBottom:6}}>
+            <span>전체 진행률</span>
+            <span style={{fontWeight:700,opacity:1,color:"#6EE7B7"}}>{totalProg * 10}% (평균 {totalProg}/10점)</span>
+          </div>
+          <div style={{height:8,background:"rgba(255,255,255,.1)",borderRadius:4,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${totalProg*10}%`,background:"linear-gradient(90deg,#10B981,#34D399)",borderRadius:4,transition:"width .5s ease"}}/>
+          </div>
+          <div style={{display:"flex",marginTop:8,gap:2}}>
+            {roadmap.phases.map((ph,i)=>(
+              <div key={ph.id} title={ph.name} style={{flex:ph.endMonth-ph.startMonth+1,height:3,borderRadius:2,background:ph.color,opacity:.7}}/>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── TIMELINE VIEW ─── */
+function TimelineView({roadmap,zoom,onEditTask,onEditPhase,onAddTask}){
+  const[showAdd,setShowAdd]=useState(null);
+  const[newTitle,setNewTitle]=useState("");
+  const cfg=ZOOMS[zoom];
+  const COL=cfg.col;
+  const maxMonth=useMemo(()=>{
+    let m=0;
+    roadmap.phases.forEach(p=>{if(p.endMonth>m)m=p.endMonth;p.tasks.forEach(t=>{if(t.endMonth>m)m=t.endMonth;});});
+    return Math.max(m+2,24);
+  },[roadmap]);
+
+  const headerCells=useMemo(()=>{
+    const cells=[];
+    const gs=cfg.group;
+    const total=Math.ceil(maxMonth/gs)*gs;
+    for(let i=0;i<total;i+=gs)cells.push({start:i,width:gs*COL,label:cfg.hdr(i)});
+    return cells;
+  },[maxMonth,zoom,COL]);
+
+  const totalCols=headerCells.length>0?headerCells[headerCells.length-1].start+cfg.group:maxMonth;
+  const mToPx=m=>(m-1)*COL;
+  const spanPx=(s,e)=>Math.max((e-s+1)*COL-4,14);
+  const curMonth=2; // current month indicator
+
+  const addTask=(phaseId)=>{
+    if(!newTitle.trim())return;
+    const ph=roadmap.phases.find(p=>p.id===phaseId);
+    onAddTask(phaseId,newTitle.trim(),ph.startMonth,ph.endMonth);
+    setNewTitle("");setShowAdd(null);
+  };
+
+  return(
+    <div style={{padding:"20px 24px",maxWidth:1280,margin:"0 auto"}}>
+      <div style={{overflowX:"auto",overflowY:"auto",maxHeight:"calc(100vh - 200px)",paddingBottom:16,borderRadius:12,border:"1px solid var(--border)",background:"white",boxShadow:"var(--shadow-sm)"}}>
+        <div style={{minWidth:Math.max(totalCols*COL+230,700)}}>
+          {/* Sticky header row */}
+          <div style={{position:"sticky",top:0,zIndex:20,background:"white",borderBottom:"2px solid var(--border)",display:"flex",boxShadow:"0 2px 6px rgba(0,0,0,.06)"}}>
+            <div style={{width:230,flexShrink:0,background:"white",padding:"8px 12px",display:"flex",alignItems:"center"}}>
+              <span style={{fontSize:12,fontWeight:700,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".06em"}}>작업 항목</span>
+            </div>
+            {headerCells.map((cell,ci)=>(
+              <div key={ci} style={{width:cell.width,flexShrink:0,textAlign:"center",fontSize:13,fontWeight:700,color:ci%2===0?"var(--text2)":"var(--muted)",padding:"8px 0",background:ci%2===0?"white":"#FAFBFC",letterSpacing:".04em",borderLeft:"1px solid #F1F5F9"}}>
+                {cell.label}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid body */}
+          <div style={{position:"relative",paddingTop:4}}>
+            {/* Vertical grid lines */}
+            <div style={{position:"absolute",top:0,bottom:0,left:210,right:0,display:"flex",pointerEvents:"none",zIndex:0}}>
+              {Array.from({length:totalCols},(_,i)=>(
+                <div key={i} style={{width:COL,flexShrink:0,height:"100%",borderLeft:i%cfg.group===0?"1px solid #E2E8F0":"1px solid #F8FAFC"}}/>
+              ))}
+            </div>
+            {/* Current month indicator */}
+            <div style={{position:"absolute",top:0,bottom:0,left:210+mToPx(curMonth),width:2,background:"rgba(220,38,38,.3)",zIndex:5,pointerEvents:"none"}}>
+              <div style={{position:"absolute",top:-2,left:-18,background:"#DC2626",color:"white",fontSize:8,fontWeight:700,padding:"1px 4px",borderRadius:3,whiteSpace:"nowrap"}}>현재</div>
+            </div>
+
+            {roadmap.phases.map(phase=>(
+              <div key={phase.id} style={{marginBottom:20,position:"relative",zIndex:1}}>
+                {/* Phase header row */}
+                <div style={{display:"flex",alignItems:"center",marginBottom:4,background:phase.color+"06",borderRadius:6}}>
+                  <div onClick={()=>onEditPhase(phase)} style={{width:230,flexShrink:0,display:"flex",alignItems:"center",gap:10,cursor:"pointer",paddingRight:10,paddingTop:4,paddingBottom:4,paddingLeft:6,position:"sticky",left:0,background:phase.color+"06",zIndex:2,borderRadius:6}}>
+                    <div style={{width:34,height:34,borderRadius:9,background:phase.color+"20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,border:`1px solid ${phase.color}30`,flexShrink:0}}>{phase.icon}</div>
+                    <div style={{overflow:"hidden"}}>
+                      <div style={{fontSize:14,fontWeight:700,color:phase.color,lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{phase.name}</div>
+                      <div style={{fontSize:12,color:"var(--muted)"}}>{phase.period}</div>
+                    </div>
+                  </div>
+                  <div style={{position:"relative",flex:1,height:28}}>
+                    <div style={{position:"absolute",left:mToPx(phase.startMonth)+1,width:spanPx(phase.startMonth,phase.endMonth),height:28,background:phase.color+"12",borderRadius:6,border:`1.5px solid ${phase.color}25`}}>
+                      {spanPx(phase.startMonth,phase.endMonth)>80&&<div style={{fontSize:12,color:phase.color,fontWeight:700,padding:"0 10px",lineHeight:"28px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",opacity:.8}}>{phase.milestone}</div>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Task rows */}
+                {phase.tasks.map(task=>{
+                  const sc=STATUS[task.status];
+                  const bw=spanPx(task.startMonth,task.endMonth);
+                  const isComp=task.status==="completed";
+                  const isInprog=task.status==="in-progress";
+                  const isBlock=task.status==="blocked";
+                  return(
+                    <div key={task.id} style={{display:"flex",alignItems:"center",marginBottom:4}}>
+                      <div onClick={()=>onEditTask({task,phase})} style={{width:230,flexShrink:0,paddingLeft:44,paddingRight:8,fontSize:13,color:"var(--text2)",cursor:"pointer",overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",lineHeight:"24px",display:"flex",alignItems:"center",gap:6,position:"sticky",left:0,background:"white",zIndex:1}} title={task.title}>
+                        <span style={{width:7,height:7,borderRadius:"50%",background:sc.dot,flexShrink:0}}/>
+                        <span style={{overflow:"hidden",textOverflow:"ellipsis"}}>{task.title}</span>
+                      </div>
+                      <div style={{position:"relative",flex:1,height:24}}>
+                        <div onClick={()=>onEditTask({task,phase})} title={`${task.title} · ${task.progress}/10점 · ${task.startMonth}~${task.endMonth}개월차`}
+                          style={{position:"absolute",left:mToPx(task.startMonth)+2,width:bw,height:22,borderRadius:6,cursor:"pointer",transition:"all .15s",
+                            background:isComp?phase.color:isInprog?`${phase.color}CC`:isBlock?"#EF4444AA":`${phase.color}30`,
+                            display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,
+                            color:isComp||isInprog||isBlock?"white":phase.color,fontWeight:700,
+                            boxShadow:isInprog?`0 2px 8px ${phase.color}44`:"none",
+                          }}>
+                          {bw>44&&`${task.progress}/10`}
+                          {isInprog&&<span style={{position:"absolute",top:3,right:3,width:5,height:5,borderRadius:"50%",background:"rgba(255,255,255,.85)",animation:"pulse 1.5s infinite"}}/>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Add task row */}
+                <div style={{display:"flex",alignItems:"center"}}>
+                  <div style={{width:210,flexShrink:0,paddingLeft:36}}>
+                    {showAdd===phase.id?(
+                      <div style={{display:"flex",gap:4}}>
+                        <input value={newTitle} onChange={e=>setNewTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addTask(phase.id)} placeholder="항목명..." autoFocus style={{width:110,fontSize:15,border:"1px solid var(--border2)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
+                        <button onClick={()=>addTask(phase.id)} style={{background:phase.color,color:"white",border:"none",borderRadius:4,padding:"2px 7px",cursor:"pointer",fontSize:15}}>+</button>
+                        <button onClick={()=>{setShowAdd(null);setNewTitle("");}} style={{background:"var(--surface2)",border:"none",borderRadius:4,padding:"2px 5px",cursor:"pointer",fontSize:15}}>×</button>
+                      </div>
+                    ):(
+                      <button onClick={()=>setShowAdd(phase.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:"var(--muted)",padding:0}}>+ 추가</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Legend - sticky bottom */}
+      <div style={{position:"sticky",bottom:0,background:"white",borderTop:"1px solid var(--border)",display:"flex",gap:16,padding:"10px 16px",flexWrap:"wrap",alignItems:"center",zIndex:10,boxShadow:"0 -2px 8px rgba(0,0,0,.05)"}}>
+        {Object.entries(STATUS).map(([k,v])=>(
+          <div key={k} style={{display:"flex",alignItems:"center",gap:5,fontSize:15,color:"var(--text2)"}}>
+            <span style={{width:7,height:7,borderRadius:"50%",background:v.dot,display:"inline-block"}}/>
+            {v.label}
+          </div>
+        ))}
+        <span style={{marginLeft:"auto",fontSize:15,color:"var(--muted)"}}>바 안의 숫자 = 진행도(0-10점) · 빨간 점선 = 현재 시점</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── DETAIL VIEW ─── */
+function DetailView({roadmap,activePhase,setActivePhase,onEditTask,onEditPhase,filterStatus,filterPriority,searchQuery,onAddTask,onOpenWorkspace,onReorderTask,onReorderPhase}){
+  const[showAdd,setShowAdd]=useState(false);
+  const[newTitle,setNewTitle]=useState("");
+  const curPhase=activePhase?roadmap.phases.find(p=>p.id===activePhase):null;
+
+  const filterTasks=tasks=>tasks.filter(t=>{
+    const ms=filterStatus==="all"||t.status===filterStatus;
+    const mp=filterPriority==="all"||t.priority===filterPriority;
+    const mq=!searchQuery||t.title.toLowerCase().includes(searchQuery.toLowerCase())||t.assignee.toLowerCase().includes(searchQuery.toLowerCase());
+    return ms&&mp&&mq;
+  });
+
+  return(
+    <div style={{maxWidth:1280,margin:"0 auto",padding:"0 24px 80px"}}>
+      {/* Phase tabs */}
+      <div style={{display:"flex",overflowX:"auto",gap:6,padding:"16px 0 14px",borderBottom:"1px solid var(--border)"}}>
+        {roadmap.phases.map(p=>{
+          const ft=filterTasks(p.tasks);
+          const comp=ft.filter(t=>t.status==="completed").length;
+          const pct2=ft.length?Math.round((comp/ft.length)*100):0;
+          const isActive=activePhase===p.id;
+          const phaseIdx=roadmap.phases.findIndex(pp=>pp.id===p.id);
+          return(
+            <div key={p.id} style={{flexShrink:0,display:"flex",alignItems:"center",gap:2}}>
+              <button onClick={()=>setActivePhase(p.id)}
+                style={{padding:"8px 14px",background:isActive?p.color+"10":"transparent",border:isActive?`1.5px solid ${p.color}40`:"1.5px solid transparent",borderRadius:6,cursor:"pointer",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap",transition:"all .15s"}}>
+                <span style={{fontSize:14}}>{p.icon}</span>
+                <span style={{fontSize:14,fontWeight:isActive?700:400,color:isActive?p.color:"var(--text2)"}}>{p.name}</span>
+                <span className="tag" style={{background:isActive?p.color:"var(--border)",color:isActive?"white":"var(--muted)",fontSize:14}}>{pct2}%</span>
+              </button>
+              <div style={{display:"flex",flexDirection:"column",gap:1}}>
+                <button onClick={()=>onReorderPhase(p.id,-1)} disabled={phaseIdx===0}
+                  title="Phase 위로" style={{padding:"2px 5px",border:"1px solid var(--border)",borderRadius:3,cursor:phaseIdx===0?"default":"pointer",fontSize:11,lineHeight:1,background:"white",color:phaseIdx===0?"var(--border)":"var(--text2)",opacity:phaseIdx===0?.35:1}}>▲</button>
+                <button onClick={()=>onReorderPhase(p.id,1)} disabled={phaseIdx===roadmap.phases.length-1}
+                  title="Phase 아래로" style={{padding:"2px 5px",border:"1px solid var(--border)",borderRadius:3,cursor:phaseIdx===roadmap.phases.length-1?"default":"pointer",fontSize:11,lineHeight:1,background:"white",color:phaseIdx===roadmap.phases.length-1?"var(--border)":"var(--text2)",opacity:phaseIdx===roadmap.phases.length-1?.35:1}}>▼</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {curPhase&&(
+        <div style={{paddingTop:20}} className="fade">
+          {/* Phase header */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,background:"white",borderRadius:10,padding:"16px 20px",border:"1px solid #E2E8F0",boxShadow:"0 1px 3px rgba(0,0,0,.06)",borderLeft:`4px solid ${curPhase.color}`}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                <span style={{fontSize:22}}>{curPhase.icon}</span>
+                <h2 style={{fontSize:20,fontWeight:800,color:curPhase.color}}>{curPhase.name}</h2>
+                <span className="tag" style={{background:curPhase.color+"15",color:curPhase.color}}>{curPhase.period}</span>
+              </div>
+              {curPhase.objective&&<p style={{fontSize:15,color:"var(--text2)",marginBottom:6}}>{curPhase.objective}</p>}
+              {curPhase.milestone&&<div style={{display:"flex",alignItems:"center",gap:6,fontSize:14,color:"var(--muted)"}}>🏁 <span>{curPhase.milestone}</span></div>}
+            </div>
+            <button onClick={()=>onEditPhase(curPhase)} className="btn btn-outline" style={{fontSize:14,flexShrink:0}}>편집</button>
+          </div>
+
+          {/* Task list */}
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {filterTasks(curPhase.tasks).map(function(task){
+              const sc=STATUS[task.status];
+              const pc=PRIORITY[task.priority];
+              const checkDone=task.checklist.filter(function(c){return c.done;}).length;
+              const taskIdx=curPhase.tasks.findIndex(function(t){return t.id===task.id;});
+              const isFirst=taskIdx===0;
+              const isLast=taskIdx===curPhase.tasks.length-1;
+              const btnBase={width:32,height:32,border:"1.5px solid #CBD5E1",borderRadius:6,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:"white",color:"#64748B",fontWeight:700,transition:"all .15s",flexShrink:0};
+              const btnDisabled={...btnBase,opacity:0.25,cursor:"default",color:"#CBD5E1"};
+              return(
+                <div key={task.id} style={{display:"flex",flexDirection:"row",gap:8,alignItems:"center"}}>
+                  {/* ▲▼ 순서 버튼 */}
+                  <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}} onClick={function(e){e.stopPropagation();}}>
+                    <button
+                      style={isFirst ? btnDisabled : btnBase}
+                      disabled={isFirst}
+                      title="위로 이동"
+                      onClick={function(e){e.stopPropagation();if(!isFirst)onReorderTask(curPhase.id,task.id,-1);}}
+                      onMouseEnter={function(e){if(!isFirst){e.currentTarget.style.background=curPhase.color;e.currentTarget.style.color="white";e.currentTarget.style.borderColor=curPhase.color;}}}
+                      onMouseLeave={function(e){if(!isFirst){e.currentTarget.style.background="white";e.currentTarget.style.color="#64748B";e.currentTarget.style.borderColor="#CBD5E1";}}}>
+                      ▲
+                    </button>
+                    <button
+                      style={isLast ? btnDisabled : btnBase}
+                      disabled={isLast}
+                      title="아래로 이동"
+                      onClick={function(e){e.stopPropagation();if(!isLast)onReorderTask(curPhase.id,task.id,1);}}
+                      onMouseEnter={function(e){if(!isLast){e.currentTarget.style.background=curPhase.color;e.currentTarget.style.color="white";e.currentTarget.style.borderColor=curPhase.color;}}}
+                      onMouseLeave={function(e){if(!isLast){e.currentTarget.style.background="white";e.currentTarget.style.color="#64748B";e.currentTarget.style.borderColor="#CBD5E1";}}}>
+                      ▼
+                    </button>
+                  </div>
+                  {/* 카드 */}
+                  <div className="card hov" onClick={function(){onEditTask({task,phase:curPhase});}} style={{overflow:"hidden",flex:1}}>
+                    <div style={{padding:"16px 18px",borderLeft:"4px solid "+curPhase.color,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <h3 style={{fontSize:16,fontWeight:700,lineHeight:1.3,marginBottom:8}}>{task.title}</h3>
+                        <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap",fontSize:13,color:"var(--muted)",marginBottom:10}}>
+                          <span>📅 {task.startMonth}~{task.endMonth}개월차</span>
+                          {task.deadline&&<span>⏰ {task.deadline}</span>}
+                          {task.assignee&&<span>👤 {task.assignee}</span>}
+                          {task.kpi&&<span style={{color:curPhase.color,fontWeight:600}}>🎯 {task.kpi}</span>}
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{width:120,height:7,background:"var(--border)",borderRadius:4,overflow:"hidden"}}>
+                            <div style={{height:"100%",width:(task.progress*10)+"%",background:getProgColor(task.progress),borderRadius:4,transition:"width .3s"}}/>
+                          </div>
+                          <span style={{fontSize:14,fontWeight:700,color:getProgColor(task.progress)}}>{task.progress}/10</span>
+                          {task.checklist.length>0&&<span style={{fontSize:13,color:"var(--muted)",marginLeft:4}}>체크 {checkDone}/{task.checklist.length}</span>}
+                        </div>
+                      </div>
+                      <div style={{display:"flex",gap:5,flexDirection:"column",alignItems:"flex-end",flexShrink:0}}>
+                        <span className="tag" style={{background:pc.bg,color:pc.color}}>{pc.label}</span>
+                        <span className="tag" style={{background:sc.bg,color:sc.text}}>{sc.label}</span>
+                        <button onClick={function(e){e.stopPropagation();onOpenWorkspace({task,phase:curPhase});}}
+                          style={{padding:"5px 10px",border:"1.5px solid "+curPhase.color+"40",borderRadius:6,cursor:"pointer",fontSize:13,fontWeight:700,background:curPhase.color+"10",color:curPhase.color,marginTop:2,whiteSpace:"nowrap",transition:"all .15s"}}
+                          onMouseEnter={function(e){e.currentTarget.style.background=curPhase.color;e.currentTarget.style.color="white";}}
+                          onMouseLeave={function(e){e.currentTarget.style.background=curPhase.color+"10";e.currentTarget.style.color=curPhase.color;}}>
+                          📂 작업
+                        </button>
+                      </div>
+                    </div>
+                    {task.details.length>0&&(
+                      <div style={{padding:"0 16px 10px 20px",borderTop:"1px solid #F8FAFC"}}>
+                        {task.details.slice(0,3).map(function(d,i){return(
+                          <div key={i} style={{fontSize:14,color:"var(--text2)",padding:"2px 0",display:"flex",gap:5}}>
+                            <span style={{color:curPhase.color,opacity:0.4,flexShrink:0}}>▸</span>{d}
+                          </div>
+                        );})}
+                        {task.details.length>3&&<div style={{fontSize:15,color:"var(--muted)",marginTop:2}}>+{task.details.length-3}개 더보기...</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {showAdd?(
+              <div className="card" style={{padding:14}}>
+                <input value={newTitle} onChange={e=>setNewTitle(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){onAddTask(curPhase.id,newTitle.trim(),curPhase.startMonth,curPhase.endMonth);setNewTitle("");setShowAdd(false);}}} placeholder="새 항목 제목..." className="inp" autoFocus style={{marginBottom:10}}/>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{onAddTask(curPhase.id,newTitle.trim(),curPhase.startMonth,curPhase.endMonth);setNewTitle("");setShowAdd(false);}} className="btn btn-teal" style={{background:curPhase.color}}>추가</button>
+                  <button onClick={()=>setShowAdd(false)} className="btn btn-outline">취소</button>
+                </div>
+              </div>
+            ):(
+              <button onClick={()=>setShowAdd(true)} className="card" style={{padding:14,width:"100%",border:"2px dashed var(--border2)",background:"transparent",cursor:"pointer",color:"var(--muted)",fontSize:15,fontWeight:500,textAlign:"center",transition:"all .15s"}}>
+                + 새 항목 추가
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── DASHBOARD VIEW ─── */
+function DashboardView({roadmap,totalProg,onEditTask,setView,setActivePhase,filterStatus}){
+  const allTasks=roadmap.phases.flatMap(p=>p.tasks);
+  const statCards=[
+    {label:"평균 진행도",val:`${totalProg}/10`,color:getProgColor(totalProg),bg:"#F0FDF4"},
+    {label:"완료 작업",val:allTasks.filter(t=>t.status==="completed").length,sub:"건",color:"#059669",bg:"#ECFDF5"},
+    {label:"진행 중",val:allTasks.filter(t=>t.status==="in-progress").length,sub:"건",color:"#2563EB",bg:"#EFF6FF"},
+    {label:"미착수",val:allTasks.filter(t=>t.status==="not-started").length,sub:"건",color:"#94A3B8",bg:"#F8FAFC"},
+    {label:"보류",val:allTasks.filter(t=>t.status==="blocked").length,sub:"건",color:"#DC2626",bg:"#FEF2F2"},
+    {label:"높은 우선순위",val:allTasks.filter(t=>t.priority==="high").length,sub:"건",color:"#D97706",bg:"#FFFBEB"},
+  ];
+
+  const upcoming=allTasks.filter(t=>t.deadline&&new Date(t.deadline)<new Date(Date.now()+14*86400000)&&t.status!=="completed").sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).slice(0,5);
+  const highPri=allTasks.filter(t=>t.priority==="high"&&t.status!=="completed"&&(filterStatus==="all"||t.status===filterStatus)).slice(0,6);
+
+  return(
+    <div style={{maxWidth:1280,margin:"0 auto",padding:"20px 24px"}} className="fade">
+      {/* Stat cards */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:20}}>
+        {statCards.map((s,i)=>(
+          <div key={i} className="card" style={{padding:"18px 20px",borderTop:`3px solid ${s.color}`,background:s.bg}}>
+            <div style={{fontSize:14,color:"var(--text2)",marginBottom:8,fontWeight:600}}>{s.label}</div>
+            <div style={{fontSize:32,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}<span style={{fontSize:16,fontWeight:500,color:s.color,opacity:.7,marginLeft:3}}>{s.sub}</span></div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+        {/* Phase progress */}
+        <div className="card" style={{padding:20}}>
+          <h3 style={{fontSize:17,fontWeight:700,marginBottom:16,color:"var(--text)"}}>Phase별 진행 현황</h3>
+          {roadmap.phases.map(phase=>{
+            const ft=phase.tasks.filter(t=>filterStatus==="all"||t.status===filterStatus);
+            const avg=ft.length?Math.round(ft.reduce((s,t)=>s+(t.progress||0),0)/ft.length):0;
+            const comp=ft.filter(t=>t.status==="completed").length;
+            return(
+              <div key={phase.id} onClick={()=>{setView("detail");setActivePhase(phase.id);}} style={{marginBottom:12,cursor:"pointer",padding:"10px 12px",borderRadius:8,transition:"background .15s"}} className="hov">
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}>
+                    <span style={{fontSize:14}}>{phase.icon}</span>
+                    <span style={{fontSize:14,fontWeight:600,color:phase.color}}>{phase.name}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,fontSize:15}}>
+                    <span style={{color:"var(--muted)"}}>✅ {comp}/{ft.length}</span>
+                    <span style={{fontWeight:700,color:getProgColor(avg)}}>{avg}/10</span>
+                  </div>
+                </div>
+                <div className="progress">
+                  <div className="progress-fill" style={{width:`${avg*10}%`,background:getProgColor(avg)}}/>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Upcoming deadlines */}
+        <div className="card" style={{padding:20}}>
+          <h3 style={{fontSize:17,fontWeight:700,marginBottom:16}}>⏰ 임박한 기한 (14일 이내)</h3>
+          {upcoming.length===0?(
+            <div style={{textAlign:"center",padding:"30px 0",color:"var(--muted)",fontSize:15}}>임박한 기한이 없습니다</div>
+          ):upcoming.map(task=>{
+            const ph=roadmap.phases.find(p=>p.tasks.some(t=>t.id===task.id));
+            const daysLeft=Math.ceil((new Date(task.deadline)-new Date())/(1000*60*60*24));
+            return(
+              <div key={task.id} onClick={()=>{if(ph){setView("detail");setActivePhase(ph.id);}}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--border)",cursor:"pointer"}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{task.title}</div>
+                  <div style={{fontSize:15,color:"var(--muted)",marginTop:2}}>👤 {task.assignee||"미배정"} · {ph?.name}</div>
+                </div>
+                <span className="tag" style={{background:daysLeft<=3?"#FEF2F2":"#FFFBEB",color:daysLeft<=3?"#DC2626":"#D97706",flexShrink:0}}>{daysLeft}일</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* High priority tasks */}
+      <div className="card" style={{padding:20}}>
+        <h3 style={{fontSize:17,fontWeight:700,marginBottom:14}}>🔴 높은 우선순위 작업</h3>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
+          {highPri.map(task=>{
+            const ph=roadmap.phases.find(p=>p.tasks.some(t=>t.id===task.id));
+            const sc=STATUS[task.status];
+            return(
+              <div key={task.id} onClick={()=>{if(ph){setView("detail");setActivePhase(ph.id);}}} className="hov" style={{padding:"12px 14px",borderRadius:8,background:ph?.color+"08",border:`1px solid ${ph?.color}20`,cursor:"pointer"}}>
+                <div style={{fontSize:14,fontWeight:700,color:ph?.color,marginBottom:4}}>{ph?.icon} {task.title}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:15,color:"var(--muted)"}}>
+                  <span>👤 {task.assignee||"미배정"} · {task.progress}/10점</span>
+                  <span className="tag" style={{background:sc.bg,color:sc.text}}>{sc.label}</span>
+                </div>
+                {task.kpi&&<div style={{fontSize:15,color:ph?.color,marginTop:4,fontWeight:600}}>🎯 {task.kpi}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── KPI VIEW ─── */
+function KPIView({roadmap,onUpdateKPI}){
+  const kpis=roadmap.kpis||[];
+  const phases=roadmap.phases;
+  const milestones=[
+    {month:2,label:"팀 빌딩 완료",color:"#0D9488"},
+    {month:5,label:"MVP 검증",color:"#2563EB"},
+    {month:9,label:"PMF + 시드",color:"#7C3AED"},
+    {month:15,label:"Pre-A + 스케일업",color:"#D97706"},
+    {month:20,label:"글로벌 진출",color:"#BE185D"},
+    {month:24,label:"시리즈 A + ARR 50억",color:"#DC2626"},
+  ];
+
+  return(
+    <div style={{maxWidth:1280,margin:"0 auto",padding:"20px 24px"}} className="fade">
+      {/* KPI cards */}
+      <h3 style={{fontSize:14,fontWeight:700,marginBottom:14,color:"var(--text)"}}>핵심 성과 지표 (KPI)</h3>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14,marginBottom:24}}>
+        {kpis.map(kpi=>{
+          const p=pct(kpi.current,kpi.target);
+          const color=p>=80?"#059669":p>=40?"#D97706":p>=10?"#2563EB":"#94A3B8";
+          return(
+            <div key={kpi.id} className="card" style={{padding:20,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:color,opacity:.8}}/>
+              <div style={{fontSize:22,marginBottom:6}}>{kpi.icon}</div>
+              <div style={{fontSize:15,color:"var(--muted)",fontWeight:600,marginBottom:6,textTransform:"uppercase",letterSpacing:".05em"}}>{kpi.label}</div>
+              <div style={{fontSize:22,fontWeight:800,color:"var(--text)",marginBottom:2}}>{fmt(kpi.current,kpi.unit)}</div>
+              <div style={{fontSize:15,color:"var(--muted)",marginBottom:10}}>목표: {fmt(kpi.target,kpi.unit)}</div>
+              <div className="progress" style={{marginBottom:6}}>
+                <div className="progress-fill" style={{width:`${p}%`,background:color}}/>
+              </div>
+              <div style={{fontSize:15,fontWeight:700,color:color}}>{p}% 달성</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 24-month milestone timeline */}
+      <div className="card" style={{padding:24,marginBottom:20}}>
+        <h3 style={{fontSize:17,fontWeight:700,marginBottom:20}}>📅 24개월 마일스톤 타임라인</h3>
+        <div style={{position:"relative",height:60}}>
+          <div style={{position:"absolute",top:"50%",left:0,right:0,height:2,background:"var(--border)",transform:"translateY(-50%)"}}/>
+          {milestones.map((m,i)=>{
+            const left=`${((m.month-1)/23)*100}%`;
+            return(
+              <div key={i} style={{position:"absolute",left,transform:"translateX(-50%)",textAlign:"center"}}>
+                <div style={{width:12,height:12,borderRadius:"50%",background:m.color,margin:"0 auto 4px",border:"2px solid white",boxShadow:`0 0 0 2px ${m.color}`}}/>
+                <div style={{fontSize:14,fontWeight:700,color:m.color,whiteSpace:"nowrap"}}>{m.label}</div>
+                <div style={{fontSize:8,color:"var(--muted)"}}>{m.month}M</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Phase financials */}
+      <div className="card" style={{padding:20}}>
+        <h3 style={{fontSize:17,fontWeight:700,marginBottom:16}}>💰 단계별 재무 목표</h3>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:14}}>
+            <thead>
+              <tr style={{borderBottom:"2px solid var(--border)"}}>
+                {["Phase","기간","재무 목표","팀 규모","핵심 이정표"].map(h=>(
+                  <th key={h} style={{padding:"8px 12px",textAlign:"left",color:"var(--muted)",fontWeight:700,fontSize:15,textTransform:"uppercase",letterSpacing:".05em"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                {ph:"Phase 1 🏗️",period:"1~2개월",fin:"운영비 절감, 정부지원 확보",team:"5명",key:"팀 구성 + 법인 정비"},
+                {ph:"Phase 2 🔬",period:"3~5개월",fin:"텍스코어 지원금 활용",team:"7명",key:"MVP 완성 + 파일럿 50명"},
+                {ph:"Phase 3 🎯",period:"6~9개월",fin:"MRR 1,000만원 + 시드 3~5억",team:"10명",key:"PMF + 첫 유료고객 20개"},
+                {ph:"Phase 4 🚀",period:"10~15개월",fin:"MRR 5,000만원 + Pre-A 10~20억",team:"15명",key:"B2G 10건 + 스케일업"},
+                {ph:"Phase 5 🌍",period:"16~20개월",fin:"MRR 2억원 + 해외 매출 시작",team:"25명",key:"해외법인 + 글로벌 파트너 10개"},
+                {ph:"Phase 6 💎",period:"21~24개월",fin:"ARR 50억 + 시리즈 A 30~50억",team:"40명",key:"글로벌 MAU 10만 + IPO 준비"},
+              ].map((r,i)=>(
+                <tr key={i} style={{borderBottom:"1px solid var(--border)",transition:"background .15s"}} onMouseEnter={e=>e.currentTarget.style.background="#F8FAFC"} onMouseLeave={e=>e.currentTarget.style.background=""}>
+                  <td style={{padding:"10px 12px",fontWeight:700,color:"var(--text)"}}>{r.ph}</td>
+                  <td style={{padding:"10px 12px",color:"var(--text2)"}}>{r.period}</td>
+                  <td style={{padding:"10px 12px",color:"var(--green)",fontWeight:600}}>{r.fin}</td>
+                  <td style={{padding:"10px 12px",color:"var(--blue)",fontWeight:600}}>{r.team}</td>
+                  <td style={{padding:"10px 12px",color:"var(--text2)"}}>{r.key}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── DOC TYPES ─── */
+const DOC_TYPES=[
+  {id:"report",  label:"📄 보고서",    template:"# 보고서\n\n## 목적\n\n## 현황 분석\n\n## 주요 내용\n\n## 결론 및 제언\n"},
+  {id:"manual",  label:"📘 매뉴얼",    template:"# 매뉴얼\n\n## 개요\n\n## 사전 준비\n\n## 단계별 절차\n\n### 1단계\n\n### 2단계\n\n## 주의사항\n"},
+  {id:"note",    label:"📝 내용 정리", template:"# 내용 정리\n\n## 핵심 포인트\n\n## 세부 내용\n\n## 참고 자료\n"},
+  {id:"research",label:"🔍 탐색 메모", template:"# 탐색 메모\n\n## 탐색 목적\n\n## 발견 사항\n\n## 추가 탐색 필요 사항\n"},
+  {id:"summary", label:"✅ 요약",       template:"# 요약\n\n## 핵심 요약\n\n## 주요 결과\n\n## 다음 단계\n"},
+];
+
+/* ─── API SETTINGS MODAL ─── */
+function APISettingsModal({onClose}){
+  const[key,setKey]=useState(localStorage.getItem("quady-api-key")||"");
+  const save=()=>{localStorage.setItem("quady-api-key",key.trim());onClose();};
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"white",borderRadius:14,padding:30,width:440,boxShadow:"0 24px 64px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
+        <h2 style={{fontSize:19,fontWeight:800,marginBottom:6}}>🔑 Anthropic API 키 설정</h2>
+        <p style={{fontSize:14,color:"var(--muted)",marginBottom:18,lineHeight:1.6}}>claude-haiku-4-5 모델을 사용합니다.<br/>API 키는 브라우저 로컬에만 저장되며 외부로 전송되지 않습니다.</p>
+        <input type="password" value={key} onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==="Enter"&&save()} placeholder="sk-ant-api03-..." className="inp" style={{marginBottom:18,fontSize:15}}/>
+        <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+          <button onClick={onClose} className="btn btn-outline">취소</button>
+          <button onClick={save} className="btn btn-teal" style={{background:"var(--teal)"}}>저장</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── WORKSPACE MODAL ─── */
+function WorkspaceModal({task,phase,onClose,onOpenApiSettings}){
+  const[docType,setDocType]=useState("report");
+  const[aiMessages,setAiMessages]=useState([]);
+  const[aiInput,setAiInput]=useState("");
+  const[aiLoading,setAiLoading]=useState(false);
+  const[savedFlash,setSavedFlash]=useState(false);
+  const editorRef=useRef(null);
+  const chatEndRef=useRef(null);
+  const prevDocType=useRef(null);
+
+  const wsKey=(dt)=>`quady-ws-${task.id}-${dt}`;
+
+  // save current editor content before switching doc type
+  const saveContent=(silent=false)=>{
+    if(editorRef.current){
+      localStorage.setItem(wsKey(docType),editorRef.current.innerHTML);
+      if(!silent){setSavedFlash(true);setTimeout(()=>setSavedFlash(false),1500);}
+    }
+  };
+
+  // load content when docType changes
+  useEffect(()=>{
+    if(prevDocType.current!==null) saveContent(true);
+    prevDocType.current=docType;
+    const stored=localStorage.getItem(wsKey(docType));
+    if(editorRef.current){
+      if(stored){editorRef.current.innerHTML=stored;}
+      else{
+        const dt=DOC_TYPES.find(d=>d.id===docType);
+        editorRef.current.innerText=dt?dt.template:"";
+      }
+    }
+  },[docType]);
+
+  useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:"smooth"});},[aiMessages]);
+
+  const handleKeyDown=(e)=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==="s"){e.preventDefault();saveContent();}
+  };
+
+  const execCmd=(cmd,val=null)=>{document.execCommand(cmd,false,val);editorRef.current?.focus();};
+
+  const insertAiResponse=(text)=>{
+    if(editorRef.current){
+      const p=document.createElement("p");
+      p.innerText=text;
+      editorRef.current.appendChild(p);
+      editorRef.current.scrollTop=editorRef.current.scrollHeight;
+      saveContent(true);
+    }
+  };
+
+  const askAI=async(prompt)=>{
+    const apiKey=localStorage.getItem("quady-api-key");
+    if(!apiKey){onOpenApiSettings();return;}
+    const userMsg=(prompt||aiInput).trim();
+    if(!userMsg||aiLoading)return;
+    setAiInput("");
+    const newMsgs=[...aiMessages,{role:"user",content:userMsg}];
+    setAiMessages(newMsgs);
+    setAiLoading(true);
+    try{
+      const docText=editorRef.current?.innerText?.slice(0,600)||"";
+      const sys=`당신은 QuadY AI 에듀테크 스타트업의 사업화 로드맵 전문 AI 어시스턴트입니다.
+현재 작업: ${task.title}
+Phase: ${phase.name} (${phase.period})
+KPI: ${task.kpi||"미설정"}
+세부 내용: ${(task.details||[]).join(", ")||"없음"}
+현재 문서 내용 (앞부분): ${docText||"비어있음"}
+한국어로 전문적이고 실질적인 답변을 제공하세요.`;
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},
+        body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1024,system:sys,messages:newMsgs}),
+      });
+      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.statusText);}
+      const data=await res.json();
+      setAiMessages([...newMsgs,{role:"assistant",content:data.content[0].text}]);
+    }catch(e){
+      setAiMessages([...newMsgs,{role:"assistant",content:`❌ 오류: ${e.message}`}]);
+    }finally{setAiLoading(false);}
+  };
+
+  const QUICK=["작업 계획을 세워줘","보고서 초안 써줘","핵심 리스크는?","체크리스트 만들어줘"];
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",background:"var(--bg)"}}>
+      {/* LEFT SIDEBAR */}
+      <div style={{width:190,background:"white",borderRight:"1px solid var(--border)",display:"flex",flexDirection:"column",padding:"16px 10px",gap:4,flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,padding:"0 6px 12px",borderBottom:"1px solid var(--border)",marginBottom:6}}>
+          <span style={{fontSize:20}}>{phase.icon}</span>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".05em"}}>{phase.name}</div>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--text)",lineHeight:1.2,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{task.title}</div>
+          </div>
+        </div>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".06em",padding:"4px 6px",marginBottom:2}}>문서 유형</div>
+        {DOC_TYPES.map(dt=>(
+          <button key={dt.id} onClick={()=>{saveContent(true);setDocType(dt.id);}}
+            style={{padding:"9px 10px",border:"none",borderRadius:6,cursor:"pointer",textAlign:"left",fontSize:14,fontWeight:docType===dt.id?700:400,background:docType===dt.id?phase.color+"18":"transparent",color:docType===dt.id?phase.color:"var(--text2)",transition:"all .15s"}}>
+            {dt.label}
+          </button>
+        ))}
+        <div style={{marginTop:"auto",display:"flex",flexDirection:"column",gap:6,paddingTop:12}}>
+          <button onClick={()=>saveContent()} className="btn btn-teal"
+            style={{fontSize:13,padding:"9px 0",width:"100%",justifyContent:"center",background:savedFlash?"#059669":phase.color,transition:"background .3s"}}>
+            {savedFlash?"✓ 저장됨":"💾 저장 (Ctrl+S)"}
+          </button>
+          <button onClick={()=>{saveContent(true);onClose();}} className="btn btn-outline" style={{fontSize:13,padding:"9px 0",width:"100%",justifyContent:"center"}}>✕ 닫기</button>
+        </div>
+      </div>
+
+      {/* EDITOR CENTER */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+        {/* Toolbar */}
+        <div style={{background:"white",borderBottom:"1px solid var(--border)",padding:"8px 14px",display:"flex",alignItems:"center",gap:4,flexWrap:"wrap",flexShrink:0}}>
+          {[{cmd:"bold",l:"B",s:{fontWeight:800}},{cmd:"italic",l:"I",s:{fontStyle:"italic"}},{cmd:"underline",l:"U",s:{textDecoration:"underline"}}].map(({cmd,l,s})=>(
+            <button key={cmd} onMouseDown={e=>{e.preventDefault();execCmd(cmd);}} style={{padding:"4px 11px",border:"1px solid var(--border)",borderRadius:5,cursor:"pointer",fontSize:14,background:"white",...s}}>{l}</button>
+          ))}
+          <div style={{width:1,height:20,background:"var(--border)",margin:"0 4px"}}/>
+          {[{v:"h1",l:"H1"},{v:"h2",l:"H2"},{v:"h3",l:"H3"},{v:"p",l:"본문"}].map(({v,l})=>(
+            <button key={v} onMouseDown={e=>{e.preventDefault();execCmd("formatBlock",v);}} style={{padding:"4px 11px",border:"1px solid var(--border)",borderRadius:5,cursor:"pointer",fontSize:14,background:"white"}}>{l}</button>
+          ))}
+          <div style={{width:1,height:20,background:"var(--border)",margin:"0 4px"}}/>
+          <button onMouseDown={e=>{e.preventDefault();execCmd("insertUnorderedList");}} style={{padding:"4px 11px",border:"1px solid var(--border)",borderRadius:5,cursor:"pointer",fontSize:14,background:"white"}}>• 목록</button>
+          <button onMouseDown={e=>{e.preventDefault();execCmd("insertOrderedList");}} style={{padding:"4px 11px",border:"1px solid var(--border)",borderRadius:5,cursor:"pointer",fontSize:14,background:"white"}}>1. 목록</button>
+          <div style={{marginLeft:"auto",fontSize:13,color:"var(--muted)",display:"flex",alignItems:"center",gap:6}}>
+            <span>{DOC_TYPES.find(d=>d.id===docType)?.label}</span>
+            <span style={{color:"var(--border)"}}>|</span>
+            <span>{task.title}</span>
+          </div>
+        </div>
+        {/* Editor */}
+        <div ref={editorRef} contentEditable suppressContentEditableWarning onKeyDown={handleKeyDown}
+          style={{flex:1,overflowY:"auto",padding:"32px 48px",fontSize:16,lineHeight:1.85,color:"var(--text)",outline:"none",background:"#FAFBFC"}}/>
+      </div>
+
+      {/* RIGHT AI CHAT */}
+      <div style={{width:370,background:"white",borderLeft:"1px solid var(--border)",display:"flex",flexDirection:"column",flexShrink:0}}>
+        <div style={{padding:"14px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          <span style={{fontSize:22}}>🤖</span>
+          <div>
+            <div style={{fontSize:15,fontWeight:700}}>AI 어시스턴트</div>
+            <div style={{fontSize:12,color:"var(--muted)"}}>claude-haiku-4-5</div>
+          </div>
+          <button onClick={onOpenApiSettings} style={{marginLeft:"auto",padding:"5px 12px",border:"1px solid var(--border)",borderRadius:6,fontSize:13,cursor:"pointer",background:"transparent",fontWeight:500}}>🔑 API키</button>
+        </div>
+        <div style={{padding:"10px 12px",borderBottom:"1px solid var(--border)",display:"flex",flexWrap:"wrap",gap:5,flexShrink:0}}>
+          {QUICK.map((q,i)=>(
+            <button key={i} onClick={()=>askAI(q)} disabled={aiLoading}
+              style={{padding:"5px 10px",border:"1px solid var(--border)",borderRadius:16,fontSize:13,cursor:"pointer",background:"var(--surface2)",color:"var(--text2)",fontWeight:500,opacity:aiLoading?.6:1}}>
+              {q}
+            </button>
+          ))}
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
+          {aiMessages.length===0&&(
+            <div style={{textAlign:"center",color:"var(--muted)",fontSize:14,padding:"40px 10px",lineHeight:1.8}}>
+              <div style={{fontSize:36,marginBottom:10}}>💬</div>
+              작업에 관해 AI에게 질문하세요.<br/>빠른 질문 버튼을 눌러도 됩니다.
+            </div>
+          )}
+          {aiMessages.map((m,i)=>(
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start"}}>
+              <div style={{maxWidth:"92%",padding:"10px 13px",borderRadius:m.role==="user"?"12px 12px 2px 12px":"12px 12px 12px 2px",background:m.role==="user"?phase.color:"var(--surface2)",color:m.role==="user"?"white":"var(--text)",fontSize:14,lineHeight:1.65,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>
+                {m.content}
+              </div>
+              {m.role==="assistant"&&(
+                <button onClick={()=>insertAiResponse(m.content)} style={{marginTop:4,padding:"3px 10px",border:"1px solid var(--border)",borderRadius:10,fontSize:12,cursor:"pointer",background:"transparent",color:"var(--muted)"}}>
+                  📋 문서에 삽입
+                </button>
+              )}
+            </div>
+          ))}
+          {aiLoading&&(
+            <div style={{display:"flex",alignItems:"flex-start"}}>
+              <div style={{padding:"10px 14px",borderRadius:"12px 12px 12px 2px",background:"var(--surface2)",fontSize:14,color:"var(--muted)"}}>⏳ 생각 중...</div>
+            </div>
+          )}
+          <div ref={chatEndRef}/>
+        </div>
+        <div style={{padding:"12px 14px",borderTop:"1px solid var(--border)",display:"flex",gap:8,flexShrink:0}}>
+          <textarea value={aiInput} onChange={e=>setAiInput(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();askAI();}}}
+            placeholder="질문 입력... (Enter 전송, Shift+Enter 줄바꿈)"
+            style={{flex:1,resize:"none",border:"1.5px solid var(--border)",borderRadius:8,padding:"8px 10px",fontSize:14,outline:"none",height:64,fontFamily:"inherit",lineHeight:1.5}}/>
+          <button onClick={()=>askAI()} disabled={aiLoading||!aiInput.trim()}
+            style={{padding:"8px 14px",background:phase.color,color:"white",border:"none",borderRadius:8,cursor:"pointer",fontSize:14,fontWeight:600,flexShrink:0,alignSelf:"flex-end",opacity:(aiLoading||!aiInput.trim())?.5:1,transition:"opacity .2s"}}>
+            전송
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── MAIN APP ─── */
+function QuadYRoadmap(){
+  const[roadmap,setRoadmap]=useState(null);
+  const[view,setView]=useState("timeline");
+  const[zoom,setZoom]=useState("month");
+  const[activePhase,setActivePhase]=useState(null);
+  const[editTask,setEditTask]=useState(null);
+  const[editPhase,setEditPhase]=useState(null);
+  const[newPhase,setNewPhase]=useState(false);
+  const[saving,setSaving]=useState(false);
+  const[filterStatus,setFilterStatus]=useState("all");
+  const[filterPriority,setFilterPriority]=useState("all");
+  const[searchQuery,setSearchQuery]=useState("");
+  const[workspaceTask,setWorkspaceTask]=useState(null);
+  const[showApiSettings,setShowApiSettings]=useState(false);
+
+  useEffect(()=>{
+    try{
+      const saved=localStorage.getItem("quady-roadmap-v5");
+      if(saved)setRoadmap(JSON.parse(saved));
+      else setRoadmap(INIT);
+    }catch{setRoadmap(INIT);}
+  },[]);
+
+  const persist=useCallback((updated)=>{
+    setSaving(true);
+    const r={...updated,lastUpdated:new Date().toISOString().split("T")[0]};
+    setRoadmap(r);
+    try{localStorage.setItem("quady-roadmap-v5",JSON.stringify(r));}catch{}
+    setTimeout(()=>setSaving(false),600);
+  },[]);
+
+  const saveTask=(task,phaseId)=>persist({...roadmap,phases:roadmap.phases.map(p=>p.id===phaseId?{...p,tasks:p.tasks.map(t=>t.id===task.id?task:t)}:p)});
+  const moveTask=(taskId,from,to)=>{
+    if(from===to)return;
+    let mt;
+    const up={...roadmap,phases:roadmap.phases.map(p=>{
+      if(p.id===from){mt=p.tasks.find(t=>t.id===taskId);return{...p,tasks:p.tasks.filter(t=>t.id!==taskId)};}
+      return p;
+    })};
+    up.phases=up.phases.map(p=>p.id===to?{...p,tasks:[...p.tasks,mt]}:p);
+    persist(up);
+  };
+  const deleteTask=(taskId,phaseId)=>persist({...roadmap,phases:roadmap.phases.map(p=>p.id===phaseId?{...p,tasks:p.tasks.filter(t=>t.id!==taskId)}:p)});
+  const addTask=(phaseId,title,sm,em)=>{
+    if(!title)return;
+    persist({...roadmap,phases:roadmap.phases.map(p=>p.id===phaseId?{...p,tasks:[...p.tasks,{id:`t-${Date.now()}`,title,status:"not-started",progress:0,priority:"medium",assignee:"",startMonth:sm,endMonth:em,deadline:"",kpi:"",details:[],checklist:[],comments:[],deps:[]}]}:p)});
+  };
+  const savePhase=(phase)=>{
+    const exists=roadmap.phases.some(p=>p.id===phase.id);
+    persist(exists?{...roadmap,phases:roadmap.phases.map(p=>p.id===phase.id?{...phase,tasks:p.tasks}:p)}:{...roadmap,phases:[...roadmap.phases,phase]});
+  };
+  const deletePhase=(phaseId)=>{persist({...roadmap,phases:roadmap.phases.filter(p=>p.id!==phaseId)});if(activePhase===phaseId)setActivePhase(null);};
+
+  const reorderTask=(phaseId,taskId,dir)=>{
+    persist({...roadmap,phases:roadmap.phases.map(p=>{
+      if(p.id!==phaseId)return p;
+      const idx=p.tasks.findIndex(t=>t.id===taskId);
+      if(idx<0)return p;
+      const ni=idx+dir;
+      if(ni<0||ni>=p.tasks.length)return p;
+      const tasks=[...p.tasks];
+      [tasks[idx],tasks[ni]]=[tasks[ni],tasks[idx]];
+      return{...p,tasks};
+    })});
+  };
+
+  const reorderPhase=(phaseId,dir)=>{
+    const idx=roadmap.phases.findIndex(p=>p.id===phaseId);
+    if(idx<0)return;
+    const ni=idx+dir;
+    if(ni<0||ni>=roadmap.phases.length)return;
+    const phases=[...roadmap.phases];
+    [phases[idx],phases[ni]]=[phases[ni],phases[idx]];
+    persist({...roadmap,phases});
+  };
+
+  const totalProg=useMemo(()=>{
+    if(!roadmap)return 0;
+    const a=roadmap.phases.flatMap(p=>p.tasks);
+    if(!a.length)return 0;
+    return Math.round(a.reduce((s,t)=>s+(t.progress||0),0)/a.length);
+  },[roadmap]);
+
+  if(!roadmap)return<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"var(--muted)",fontSize:16,fontWeight:500}}>로딩 중...</div>;
+
+  const VIEWS=[
+    {k:"timeline",l:"📅 타임라인"},
+    {k:"detail",l:"📋 상세 보기"},
+    {k:"dashboard",l:"📊 대시보드"},
+    {k:"kpi",l:"🎯 KPI 추적"},
+  ];
+
+  return(
+    <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+      <Header roadmap={roadmap} totalProg={totalProg} saving={saving} onAddPhase={()=>setNewPhase(true)} onOpenApiSettings={()=>setShowApiSettings(true)}/>
+
+      {/* NAV */}
+      <div style={{background:"white",borderBottom:"1px solid var(--border)",position:"sticky",top:0,zIndex:50,boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+        <div style={{maxWidth:1280,margin:"0 auto",padding:"0 24px"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,paddingTop:4}}>
+            <div style={{display:"flex",alignItems:"center",gap:2}}>
+              {VIEWS.map(v=>(
+                <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
+                  style={{padding:"14px 20px",background:"none",border:"none",borderBottom:view===v.k?"3px solid var(--teal)":"3px solid transparent",cursor:"pointer",fontSize:15,fontWeight:view===v.k?700:400,color:view===v.k?"var(--teal)":"var(--muted)",transition:"all .15s",whiteSpace:"nowrap"}}>
+                  {v.l}
+                </button>
+              ))}
+              {view==="timeline"&&(
+                <div style={{display:"flex",alignItems:"center",gap:2,marginLeft:12,background:"var(--surface2)",borderRadius:8,padding:3}}>
+                  {Object.entries(ZOOMS).map(([k,c])=>(
+                    <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 11px",border:"none",borderRadius:6,cursor:"pointer",fontSize:15,fontWeight:600,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .15s"}}>
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {(view==="detail"||view==="dashboard")&&(
+              <div style={{display:"flex",alignItems:"center",gap:8,paddingBottom:4}}>
+                <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:160,fontSize:14,padding:"5px 10px"}}/>
+                <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
+                  <option value="all">상태: 모두</option>
+                  {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                </select>
+                <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
+                  <option value="all">우선순위: 모두</option>
+                  {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* VIEWS */}
+      {view==="timeline"&&<TimelineView roadmap={roadmap} zoom={zoom} onEditTask={setEditTask} onEditPhase={setEditPhase} onAddTask={addTask}/>}
+      {view==="detail"&&<DetailView roadmap={roadmap} activePhase={activePhase} setActivePhase={setActivePhase} onEditTask={setEditTask} onEditPhase={setEditPhase} filterStatus={filterStatus} filterPriority={filterPriority} searchQuery={searchQuery} onAddTask={addTask} onOpenWorkspace={setWorkspaceTask} onReorderTask={reorderTask} onReorderPhase={reorderPhase}/>}
+      {view==="dashboard"&&<DashboardView roadmap={roadmap} totalProg={totalProg} onEditTask={setEditTask} setView={setView} setActivePhase={setActivePhase} filterStatus={filterStatus}/>}
+      {view==="kpi"&&<KPIView roadmap={roadmap}/>}
+
+      {/* MODALS */}
+      {editTask&&<TaskModal task={editTask.task} phase={editTask.phase} phases={roadmap.phases} onSave={saveTask} onMove={moveTask} onDelete={deleteTask} onClose={()=>setEditTask(null)}/>}
+      {editPhase&&<PhaseModal phase={editPhase} onSave={savePhase} onDelete={deletePhase} onClose={()=>setEditPhase(null)}/>}
+      {newPhase&&<PhaseModal isNew onSave={savePhase} onDelete={()=>{}} onClose={()=>setNewPhase(false)}/>}
+      {workspaceTask&&<WorkspaceModal task={workspaceTask.task} phase={workspaceTask.phase} onClose={()=>setWorkspaceTask(null)} onOpenApiSettings={()=>setShowApiSettings(true)}/>}
+      {showApiSettings&&<APISettingsModal onClose={()=>setShowApiSettings(false)}/>}
+    </div>
+  );
+}
+
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(<QuadYRoadmap/>);
+  </script>
+</body>
+</html>

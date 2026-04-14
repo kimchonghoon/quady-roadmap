@@ -6,39 +6,42 @@
 <title>QuadY 사업화 로드맵 | TexCore Program</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F0F2F7;
+  --bg:#EEF0F6;
   --surface:#FFFFFF;
-  --surface2:#F8FAFC;
-  --border:#E2E8F0;
-  --border2:#CBD5E1;
-  --text:#0F172A;
-  --text2:#475569;
-  --muted:#94A3B8;
+  --surface2:#F5F7FB;
+  --surface3:#EDF2FF;
+  --border:#E4E9F2;
+  --border2:#C8D3E8;
+  --text:#0D1424;
+  --text2:#3D5068;
+  --muted:#8496AD;
   --teal:#0D9488;
   --teal-light:#CCFBF1;
+  --teal-mid:#14B8A6;
   --teal-dark:#0F766E;
-  --navy:#0F172A;
+  --navy:#0D1424;
   --blue:#2563EB;
   --purple:#7C3AED;
   --amber:#D97706;
   --rose:#BE185D;
   --red:#DC2626;
   --green:#059669;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
-  --shadow:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
-  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
-  --shadow-xl:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
-  --r:10px;--r-sm:6px;--r-lg:16px;--r-xl:20px;
+  --shadow-sm:0 1px 2px rgba(13,20,36,.05),0 1px 3px rgba(13,20,36,.07);
+  --shadow:0 2px 8px rgba(13,20,36,.06),0 4px 12px rgba(13,20,36,.05);
+  --shadow-lg:0 8px 24px rgba(13,20,36,.09),0 3px 8px rgba(13,20,36,.05);
+  --shadow-xl:0 20px 40px rgba(13,20,36,.12),0 8px 16px rgba(13,20,36,.06);
+  --shadow-teal:0 4px 14px rgba(13,148,136,.28);
+  --r:10px;--r-sm:7px;--r-lg:14px;--r-xl:20px;
 }
 body{
-  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
   background:var(--bg);
   color:var(--text);
   margin:0;
@@ -64,123 +67,139 @@ body{
 input,select,textarea{font-family:inherit;font-size:15px}
 button{font-family:inherit;cursor:pointer}
 .card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
-.hov{transition:all .18s ease;cursor:pointer}
+.hov{transition:all .2s cubic-bezier(.2,.8,.2,1);cursor:pointer}
 .hov:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--border2)}
-.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
-.inp{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:15px;outline:none;transition:border .15s;background:white;color:var(--text)}
-.inp:focus{border-color:var(--teal)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--r-sm);border:none;font-size:14px;font-weight:600;transition:all .15s;letter-spacing:.01em}
-.btn-teal{background:var(--teal);color:white;box-shadow:0 2px 8px rgba(13,148,136,.25)}
-.btn-teal:hover{background:var(--teal-dark);box-shadow:0 4px 14px rgba(13,148,136,.35)}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.inp{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 13px;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;background:white;color:var(--text);font-family:inherit}
+.inp:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.1)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 17px;border-radius:var(--r-sm);border:none;font-size:13.5px;font-weight:600;transition:all .18s cubic-bezier(.2,.8,.2,1);letter-spacing:.01em;font-family:inherit}
+.btn-teal{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:white;box-shadow:var(--shadow-teal)}
+.btn-teal:hover{background:linear-gradient(135deg,var(--teal-mid),var(--teal));box-shadow:0 6px 18px rgba(13,148,136,.38);transform:translateY(-1px)}
 .btn-ghost{background:transparent;color:var(--text2)}
-.btn-ghost:hover{background:var(--surface2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
 .btn-outline{background:white;color:var(--text2);border:1.5px solid var(--border)}
-.btn-outline:hover{border-color:var(--teal);color:var(--teal)}
-.progress{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
-.progress-fill{height:100%;border-radius:4px;transition:width .4s ease}
-.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);animation:fadeIn .15s ease}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light)}
+.progress{height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.modal-bg{position:fixed;inset:0;background:rgba(13,20,36,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px);animation:fadeIn .15s ease}
 .modal-box{background:white;border-radius:var(--r-xl);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);animation:fadeIn .2s ease}
-.lbl{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.07em;text-transform:uppercase}
 /* ===== AI CHAT SIDEBAR ===== */
 .chat-sidebar{
   display:flex;
   flex-direction:column;
   height:100%;
-  background:white;
+  background:#F8FAFF;
   font-family:inherit;
-  border:none;
+  border-left:1px solid var(--border);
 }
 .chat-header{
-  padding:16px;
-  border-bottom:1px solid var(--border);
-  background:linear-gradient(135deg,rgba(13,148,136,.1),rgba(37,99,235,.1));
+  padding:14px 16px;
+  border-bottom:1px solid rgba(13,148,136,.12);
+  background:linear-gradient(160deg,#0A1628 0%,#0D3D38 100%);
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
   flex-shrink:0;
 }
-.chat-header-icon{font-size:22px}
+.chat-header-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,rgba(13,148,136,.7),rgba(37,99,235,.6));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
 .chat-header-text{flex:1;min-width:0}
-.chat-header-title{font-size:14px;font-weight:700;margin:0;color:var(--text)}
-.chat-header-subtitle{font-size:12px;color:var(--muted);margin:3px 0 0}
+.chat-header-title{font-size:13.5px;font-weight:700;margin:0;color:white;letter-spacing:.01em}
+.chat-header-subtitle{font-size:11px;color:rgba(255,255,255,.45);margin:2px 0 0}
 .chat-messages{
   flex:1;
   overflow-y:auto;
   padding:14px;
   display:flex;
   flex-direction:column;
-  gap:12px;
-  background:#FAFBFC;
+  gap:10px;
+  background:transparent;
 }
-.chat-message{display:flex;margin-bottom:6px}
+.chat-message{display:flex;margin-bottom:2px}
 .chat-message.user{justify-content:flex-end}
 .chat-bubble{
-  max-width:80%;
-  padding:11px 13px;
-  border-radius:11px;
+  max-width:82%;
+  padding:10px 13px;
+  border-radius:12px;
   font-size:13px;
-  line-height:1.5;
+  line-height:1.55;
   word-wrap:break-word;
 }
 .chat-message.user .chat-bubble{
-  background:var(--teal);
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
   color:white;
-  border-radius:11px 11px 3px 11px;
+  border-radius:12px 12px 3px 12px;
+  box-shadow:0 2px 8px rgba(13,148,136,.2);
 }
 .chat-message.assistant .chat-bubble{
   background:white;
   color:var(--text);
   border:1px solid var(--border);
-  border-radius:11px 11px 11px 3px;
+  border-radius:3px 12px 12px 12px;
+  box-shadow:var(--shadow-sm);
 }
 .chat-empty{
   text-align:center;
   color:var(--muted);
-  padding:24px 12px;
-  font-size:13px;
-  line-height:1.7;
+  padding:28px 14px;
+  font-size:12.5px;
+  line-height:1.8;
 }
 .chat-input{
-  padding:12px;
+  padding:11px 12px;
   border-top:1px solid var(--border);
   display:flex;
-  gap:8px;
+  gap:7px;
   background:white;
   flex-shrink:0;
 }
 .chat-input textarea{
   flex:1;
   resize:none;
-  border:1px solid var(--border);
-  border-radius:7px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
   padding:8px 11px;
   font-size:13px;
   outline:none;
   min-height:38px;
   font-family:inherit;
-  background:white;
+  background:var(--surface2);
   color:var(--text);
+  transition:border-color .15s,box-shadow .15s;
 }
 .chat-input textarea:focus{
   border-color:var(--teal);
+  background:white;
+  box-shadow:0 0 0 3px rgba(13,148,136,.08);
 }
 .chat-input button{
   padding:8px 13px;
-  background:var(--teal);
+  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
   color:white;
-  border-radius:7px;
-  font-weight:600;
+  border-radius:8px;
+  font-weight:700;
   font-size:12px;
   cursor:pointer;
   white-space:nowrap;
-  transition:all .15s;
+  transition:all .18s;
+  border:none;
+  box-shadow:0 2px 6px rgba(13,148,136,.25);
 }
 .chat-input button:hover:not(:disabled){
-  background:var(--teal-dark);
+  background:linear-gradient(135deg,var(--teal-mid),var(--teal));
+  box-shadow:0 4px 12px rgba(13,148,136,.35);
+  transform:translateY(-1px);
 }
 .chat-input button:disabled{
-  opacity:.5;
+  opacity:.45;
   cursor:not-allowed;
+  transform:none;
 }
 
 </style>
@@ -658,66 +677,68 @@ function Header({roadmap,totalProg,saving,onAddPhase,onOpenApiSettings,onOpenAiC
   };
 
   return(
-    <div style={{background:"linear-gradient(135deg,#0A0E27 0%,#0F2850 50%,#0D4A46 100%)",color:"white",padding:"10px 20px",flexShrink:0}}>
-      {/* 1행: 로고 + 제목 + 버튼 + 업데이트 */}
+    <div style={{background:"linear-gradient(160deg,#08111F 0%,#0C2340 55%,#093830 100%)",color:"white",padding:"10px 18px",flexShrink:0,borderBottom:"1px solid rgba(255,255,255,.06)"}}>
+      {/* 1행: 로고 + 제목 + 버튼 */}
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-        <div style={{width:34,height:34,borderRadius:10,background:"linear-gradient(135deg,#0D9488,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,flexShrink:0,boxShadow:"0 2px 8px rgba(13,148,136,.4)"}}>Q</div>
+        <div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#0D9488,#1D4ED8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:800,flexShrink:0,boxShadow:"0 3px 10px rgba(13,148,136,.45)",letterSpacing:"-.5px"}}>Q</div>
         <div style={{flex:1,minWidth:0}}>
-          <h1 style={{fontSize:15,fontWeight:800,margin:0,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{roadmap.title}</h1>
-          <p style={{fontSize:11,opacity:.5,margin:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{roadmap.subtitle}</p>
+          <h1 style={{fontSize:14.5,fontWeight:800,margin:0,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",letterSpacing:"-.01em"}}>{roadmap.title}</h1>
+          <p style={{fontSize:10.5,opacity:.4,margin:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",letterSpacing:".01em"}}>{roadmap.subtitle}</p>
         </div>
-        <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
-          <button onClick={()=>window.print()} style={{padding:"5px 10px",background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",borderRadius:6,fontSize:12,cursor:"pointer"}}>🖨️ 인쇄</button>
-          <button onClick={onOpenApiSettings} style={{padding:"5px 10px",background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",borderRadius:6,fontSize:12,cursor:"pointer"}}>🔑 AI 키</button>
-          <button onClick={onAddPhase} style={{padding:"5px 10px",background:"rgba(255,255,255,.1)",color:"white",border:"1px solid rgba(255,255,255,.2)",borderRadius:6,fontSize:12,cursor:"pointer"}}>+ Phase</button>
+        <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
+          <button onClick={()=>window.print()} style={{padding:"4px 9px",background:"rgba(255,255,255,.07)",color:"rgba(255,255,255,.7)",border:"1px solid rgba(255,255,255,.12)",borderRadius:6,fontSize:11.5,cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.12)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.07)"}>🖨️ 인쇄</button>
+          <button onClick={onOpenApiSettings} style={{padding:"4px 9px",background:"rgba(255,255,255,.07)",color:"rgba(255,255,255,.7)",border:"1px solid rgba(255,255,255,.12)",borderRadius:6,fontSize:11.5,cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.12)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.07)"}>🔑 AI 키</button>
+          <button onClick={onAddPhase} style={{padding:"4px 10px",background:"rgba(13,148,136,.25)",color:"#5EEAD4",border:"1px solid rgba(13,148,136,.35)",borderRadius:6,fontSize:11.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"all .15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(13,148,136,.35)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(13,148,136,.25)"}>+ Phase</button>
         </div>
-        <div style={{fontSize:11,opacity:.35,flexShrink:0}}>업데이트: {roadmap.lastUpdated}{saving?" · 저장 중…":""}</div>
+        <div style={{fontSize:10,opacity:.28,flexShrink:0,letterSpacing:".02em"}}>업데이트: {roadmap.lastUpdated}{saving?" · 저장 중…":""}</div>
       </div>
 
       {/* 2행: 통계 + 진행률 */}
-      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
         {stats.map((s,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"baseline",gap:3,background:"rgba(255,255,255,.05)",borderRadius:7,padding:"4px 10px",border:"1px solid rgba(255,255,255,.07)"}}>
-            <span style={{fontSize:18,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</span>
-            <span style={{fontSize:10,opacity:.6}}>{s.unit}</span>
-            <span style={{fontSize:10,opacity:.45,marginLeft:2}}>{s.label}</span>
+          <div key={i} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",borderRadius:8,padding:"5px 11px",border:"1px solid rgba(255,255,255,.07)",backdropFilter:"blur(4px)"}}>
+            <span style={{fontSize:17,fontWeight:800,color:s.color,lineHeight:1,letterSpacing:"-.02em"}}>{s.val}</span>
+            <div style={{display:"flex",flexDirection:"column",gap:0}}>
+              <span style={{fontSize:9,opacity:.7,lineHeight:1.2,letterSpacing:".02em"}}>{s.unit}</span>
+              <span style={{fontSize:9,opacity:.4,lineHeight:1.2,letterSpacing:".02em"}}>{s.label}</span>
+            </div>
           </div>
         ))}
         <div style={{flex:1,minWidth:0}}>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,opacity:.5,marginBottom:3}}>
-            <span>전체 진행률</span>
-            <span style={{fontWeight:700,opacity:1,color:"#6EE7B7"}}>{totalProg*10}%</span>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:10.5,marginBottom:4}}>
+            <span style={{opacity:.4,letterSpacing:".02em"}}>전체 진행률</span>
+            <span style={{fontWeight:800,color:"#34D399",letterSpacing:"-.01em"}}>{totalProg*10}%</span>
           </div>
-          <div style={{height:5,background:"rgba(255,255,255,.1)",borderRadius:3,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${totalProg*10}%`,background:"linear-gradient(90deg,#10B981,#34D399)",borderRadius:3,transition:"width .5s ease"}}/>
+          <div style={{height:5,background:"rgba(255,255,255,.08)",borderRadius:3,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${totalProg*10}%`,background:"linear-gradient(90deg,#10B981,#34D399)",borderRadius:3,transition:"width .6s cubic-bezier(.4,0,.2,1)",boxShadow:"0 0 8px rgba(52,211,153,.4)"}}/>
           </div>
         </div>
       </div>
 
       {/* 3행: 시즌 집중 목표 */}
-      <div style={{borderTop:"1px solid rgba(255,255,255,.08)",paddingTop:8}}>
+      <div style={{borderTop:"1px solid rgba(255,255,255,.07)",paddingTop:7}}>
         {editingGoal?(
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:13,opacity:.5,flexShrink:0}}>🎯</span>
+            <span style={{fontSize:12,flexShrink:0}}>🎯</span>
             <input ref={goalInputRef} value={goalDraft} onChange={e=>setGoalDraft(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter")saveGoal();if(e.key==="Escape")setEditingGoal(false);}}
               placeholder="이번 시즌 집중 목표를 입력하세요..."
-              style={{flex:1,background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.3)",borderRadius:6,padding:"5px 10px",color:"white",fontSize:13,outline:"none",fontFamily:"inherit"}}
+              style={{flex:1,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.25)",borderRadius:7,padding:"5px 10px",color:"white",fontSize:12.5,outline:"none",fontFamily:"inherit"}}
             />
-            <button onClick={saveGoal} style={{padding:"4px 12px",background:"#0D9488",color:"white",border:"none",borderRadius:6,fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>저장</button>
-            <button onClick={()=>setEditingGoal(false)} style={{padding:"4px 8px",background:"rgba(255,255,255,.1)",color:"white",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",flexShrink:0}}>취소</button>
+            <button onClick={saveGoal} style={{padding:"4px 11px",background:"linear-gradient(135deg,#0D9488,#0F766E)",color:"white",border:"none",borderRadius:6,fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0,fontFamily:"inherit"}}>저장</button>
+            <button onClick={()=>setEditingGoal(false)} style={{padding:"4px 8px",background:"rgba(255,255,255,.08)",color:"rgba(255,255,255,.6)",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",flexShrink:0,fontFamily:"inherit"}}>취소</button>
           </div>
         ):(
-          <div onClick={startEditGoal} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"4px 6px",borderRadius:6,transition:"background .15s"}}
+          <div onClick={startEditGoal} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"3px 6px",borderRadius:6,transition:"background .15s"}}
             onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.05)"}
             onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <span style={{fontSize:13,flexShrink:0}}>🎯</span>
+            <span style={{fontSize:12,flexShrink:0}}>🎯</span>
             {goal?(
-              <span style={{fontSize:13,fontWeight:600,color:"#6EE7B7",letterSpacing:".01em",flex:1}}>{goal}</span>
+              <span style={{fontSize:12.5,fontWeight:600,color:"#6EE7B7",letterSpacing:".01em",flex:1}}>{goal}</span>
             ):(
-              <span style={{fontSize:12,opacity:.35,fontStyle:"italic",flex:1}}>클릭해서 이번 시즌 집중 목표를 입력하세요...</span>
+              <span style={{fontSize:11.5,opacity:.3,fontStyle:"italic",flex:1}}>클릭해서 이번 시즌 집중 목표를 입력하세요...</span>
             )}
-            <span style={{fontSize:11,opacity:.3,flexShrink:0}}>✏️ 편집</span>
+            <span style={{fontSize:10,opacity:.25,flexShrink:0}}>✏️</span>
           </div>
         )}
       </div>
@@ -2120,22 +2141,22 @@ function QuadYRoadmap(){
         <Header roadmap={roadmap} totalProg={totalProg} saving={saving} onAddPhase={()=>setNewPhase(true)} onOpenApiSettings={()=>setShowApiSettings(true)} onOpenAiChat={()=>setShowAiChat(true)}/>
 
         {/* NAV */}
-        <div style={{background:"white",borderBottom:"1px solid var(--border)",flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+        <div style={{background:"white",borderBottom:"1px solid var(--border)",flexShrink:0,boxShadow:"0 2px 8px rgba(13,20,36,.05)"}}>
           <div style={{padding:"0 12px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"nowrap",gap:4,paddingTop:4}}>
-              <div style={{display:"flex",alignItems:"center",gap:2,flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"nowrap",gap:4}}>
+              <div style={{display:"flex",alignItems:"center",gap:1,flexShrink:0}}>
                 {VIEWS.map(v=>(
                   <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
-                    style={{padding:"10px 10px",background:"none",border:"none",borderBottom:view===v.k?"3px solid var(--teal)":"3px solid transparent",cursor:"pointer",fontSize:13,fontWeight:view===v.k?700:400,color:view===v.k?"var(--teal)":"var(--muted)",transition:"all .15s",whiteSpace:"nowrap"}}>
+                    style={{padding:"11px 11px",background:view===v.k?"var(--surface3)":"none",border:"none",borderBottom:view===v.k?"2.5px solid var(--teal)":"2.5px solid transparent",borderRadius:"0",cursor:"pointer",fontSize:13,fontWeight:view===v.k?700:500,color:view===v.k?"var(--teal)":"var(--text2)",transition:"all .18s",whiteSpace:"nowrap"}}>
                     {v.l}
                   </button>
                 ))}
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:8,paddingBottom:4,flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                 {view==="timeline"&&(
-                  <div style={{display:"flex",alignItems:"center",gap:2,background:"var(--surface2)",borderRadius:8,padding:3}}>
+                  <div style={{display:"flex",alignItems:"center",gap:2,background:"var(--surface2)",borderRadius:8,padding:"3px",border:"1px solid var(--border)"}}>
                     {Object.entries(ZOOMS).map(([k,c])=>(
-                      <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 9px",border:"none",borderRadius:6,cursor:"pointer",fontSize:13,fontWeight:600,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .15s"}}>
+                      <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 10px",border:"none",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:700,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .18s"}}>
                         {c.label}
                       </button>
                     ))}

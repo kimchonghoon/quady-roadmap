@@ -1388,6 +1388,251 @@ function KPIView({roadmap,persist}){
   );
 }
 
+/* ─── MIND MAP VIEW ─── */
+function MindMapView(){
+  const SKEY='quady-mindmaps-v1';
+  const PALETTE=['#0D9488','#2563EB','#7C3AED','#D97706','#BE185D','#059669','#0EA5E9','#DC2626'];
+
+  const mkNode=(text,x,y,parentId,depth)=>({
+    id:`n${Date.now()}${Math.random().toString(36).slice(2,5)}`,
+    text,x,y,parentId,depth:depth||0
+  });
+  const mkMap=(title)=>{
+    const root=mkNode(title,500,320,null,0);
+    return{id:`m${Date.now()}`,title,nodes:[root]};
+  };
+
+  const[maps,setMaps]=useState(()=>{
+    try{const s=JSON.parse(localStorage.getItem(SKEY));return s?.length?s:[mkMap('QuadY 아이디어')];}
+    catch{return[mkMap('QuadY 아이디어')];}
+  });
+  const[activeId,setActiveId]=useState(()=>maps[0]?.id||null);
+  const[selId,setSelId]=useState(null);
+  const[editId,setEditId]=useState(null);
+  const[editText,setEditText]=useState('');
+  const[pan,setPan]=useState({x:0,y:0});
+  const svgRef=useRef(null);
+  const dragRef=useRef(null);
+  const panRef=useRef(null);
+  const editInputRef=useRef(null);
+  const W=1000,H=680;
+
+  const save=useCallback((updated)=>{
+    setMaps(updated);
+    try{localStorage.setItem(SKEY,JSON.stringify(updated));}catch{}
+  },[]);
+
+  const activeMap=useMemo(()=>maps.find(m=>m.id===activeId)||maps[0],[maps,activeId]);
+
+  const toSVGDelta=(dcx,dcy)=>{
+    if(!svgRef.current)return{dx:dcx,dy:dcy};
+    const r=svgRef.current.getBoundingClientRect();
+    return{dx:dcx*(W/r.width),dy:dcy*(H/r.height)};
+  };
+
+  const addChild=(parentId)=>{
+    if(!activeMap)return;
+    const parent=activeMap.nodes.find(n=>n.id===parentId);
+    if(!parent)return;
+    const siblings=activeMap.nodes.filter(n=>n.parentId===parentId);
+    const si=siblings.length;
+    const nx=parent.x+(parent.parentId===null?180:150);
+    const ny=parent.y+(si-(si>0?(si-1)/2:0))*80;
+    const newNode=mkNode('새 아이디어',nx,ny,parentId,(parent.depth||0)+1);
+    const updated=maps.map(m=>m.id===activeId?{...m,nodes:[...m.nodes,newNode]}:m);
+    save(updated);
+    setSelId(newNode.id);
+    setTimeout(()=>{setEditId(newNode.id);setEditText('새 아이디어');setTimeout(()=>editInputRef.current?.select(),30);},30);
+  };
+
+  const deleteNode=(nodeId)=>{
+    if(!activeMap)return;
+    const node=activeMap.nodes.find(n=>n.id===nodeId);
+    if(!node||!node.parentId)return;
+    const toDelete=new Set();
+    const collect=(id)=>{toDelete.add(id);activeMap.nodes.filter(n=>n.parentId===id).forEach(n=>collect(n.id));};
+    collect(nodeId);
+    save(maps.map(m=>m.id===activeId?{...m,nodes:m.nodes.filter(n=>!toDelete.has(n.id))}:m));
+    setSelId(null);setEditId(null);
+  };
+
+  const commitEdit=useCallback(()=>{
+    if(!editId)return;
+    const text=editText.trim()||'아이디어';
+    setMaps(prev=>{
+      const u=prev.map(m=>m.id===activeId?{
+        ...m,
+        title:m.nodes[0]?.id===editId?text:m.title,
+        nodes:m.nodes.map(n=>n.id===editId?{...n,text}:n)
+      }:m);
+      try{localStorage.setItem(SKEY,JSON.stringify(u));}catch{}
+      return u;
+    });
+    setEditId(null);
+  },[editId,editText,activeId]);
+
+  /* 노드 드래그 */
+  const onNodePD=(e,nodeId)=>{
+    if(editId===nodeId)return;
+    e.stopPropagation();
+    try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}
+    setSelId(nodeId);
+    const node=activeMap.nodes.find(n=>n.id===nodeId);
+    dragRef.current={nodeId,sx:e.clientX,sy:e.clientY,nx:node.x,ny:node.y,moved:false};
+  };
+  const onNodePM=(e,nodeId)=>{
+    const d=dragRef.current;
+    if(!d||d.nodeId!==nodeId)return;
+    const{dx,dy}=toSVGDelta(e.clientX-d.sx,e.clientY-d.sy);
+    if(Math.abs(dx)>3||Math.abs(dy)>3)d.moved=true;
+    if(!d.moved)return;
+    setMaps(prev=>prev.map(m=>m.id===activeId?{...m,nodes:m.nodes.map(n=>n.id===nodeId?{...n,x:Math.round(d.nx+dx),y:Math.round(d.ny+dy)}:n)}:m));
+  };
+  const onNodePU=(e,nodeId)=>{
+    const d=dragRef.current;
+    if(!d||d.nodeId!==nodeId)return;
+    if(d.moved){try{localStorage.setItem(SKEY,JSON.stringify(maps));}catch{}}
+    dragRef.current=null;
+  };
+
+  /* 캔버스 패닝 */
+  const onSvgPD=(e)=>{
+    const tgt=e.target;
+    if(tgt===svgRef.current||tgt.dataset.bg){
+      if(editId)commitEdit();
+      setSelId(null);
+      try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}
+      panRef.current={sx:e.clientX,sy:e.clientY,ox:pan.x,oy:pan.y};
+    }
+  };
+  const onSvgPM=(e)=>{
+    const p=panRef.current;if(!p)return;
+    const{dx,dy}=toSVGDelta(e.clientX-p.sx,e.clientY-p.sy);
+    setPan({x:p.ox-dx,y:p.oy-dy});
+  };
+  const onSvgPU=()=>{panRef.current=null;};
+
+  const getColor=(d)=>PALETTE[d%PALETTE.length];
+  const bezier=(p,c)=>{const mx=(p.x+c.x)/2;return`M${p.x},${p.y}C${mx},${p.y} ${mx},${c.y} ${c.x},${c.y}`;};
+
+  if(!activeMap)return null;
+  const rootNode=activeMap.nodes[0];
+
+  return(
+    <div style={{display:'flex',flex:1,height:'100%',overflow:'hidden'}} className="fade">
+
+      {/* 좌측 목록 */}
+      <div style={{width:190,flexShrink:0,background:'white',borderRight:'1px solid var(--border)',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div style={{padding:'11px 14px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+          <span style={{fontSize:11,fontWeight:700,color:'var(--muted)',letterSpacing:'.07em',textTransform:'uppercase'}}>마인드맵</span>
+          <button onClick={()=>{const m=mkMap('새 마인드맵');const u=[...maps,m];save(u);setActiveId(m.id);setSelId(null);setPan({x:0,y:0});}}
+            style={{width:26,height:26,borderRadius:7,border:'none',background:'var(--teal)',color:'white',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1,fontWeight:700}}>+</button>
+        </div>
+        <div style={{flex:1,overflowY:'auto'}}>
+          {maps.map(m=>(
+            <div key={m.id} style={{display:'flex',alignItems:'stretch',borderBottom:'1px solid var(--border)'}}>
+              <div onClick={()=>{setActiveId(m.id);setSelId(null);setEditId(null);setPan({x:0,y:0});}}
+                style={{flex:1,padding:'9px 12px',cursor:'pointer',background:m.id===activeId?'#F0FDF9':'transparent',borderLeft:m.id===activeId?'3px solid var(--teal)':'3px solid transparent',transition:'all .15s'}}>
+                <div style={{fontSize:12,fontWeight:m.id===activeId?700:500,color:m.id===activeId?'var(--teal)':'var(--text)',wordBreak:'break-word',lineHeight:1.4}}>{m.title}</div>
+                <div style={{fontSize:10,color:'var(--muted)',marginTop:3}}>{m.nodes.length}개 노드</div>
+              </div>
+              {maps.length>1&&<button onClick={()=>{if(!window.confirm('삭제하시겠습니까?'))return;const u=maps.filter(x=>x.id!==m.id);save(u);if(activeId===m.id)setActiveId(u[0]?.id||null);}}
+                style={{padding:'0 9px',background:'transparent',border:'none',color:'var(--muted)',cursor:'pointer',fontSize:13,transition:'color .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.color='#DC2626'}
+                onMouseLeave={e=>e.currentTarget.style.color='var(--muted)'}>✕</button>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 캔버스 */}
+      <div style={{flex:1,position:'relative',overflow:'hidden',background:'#F7F9FF'}}>
+
+        {/* 점 격자 배경 */}
+        <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,#CBD5E1 1px,transparent 1px)',backgroundSize:'24px 24px',opacity:.6,pointerEvents:'none'}}/>
+
+        {/* 상단 툴바 */}
+        <div style={{position:'absolute',top:12,left:'50%',transform:'translateX(-50%)',zIndex:20,display:'flex',gap:6,alignItems:'center'}}>
+          {selId&&(
+            <div style={{display:'flex',gap:6,background:'white',padding:'6px 8px',borderRadius:12,boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+              <button onClick={()=>addChild(selId)}
+                style={{padding:'5px 13px',background:'var(--teal)',color:'white',border:'none',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>＋ 하위 추가</button>
+              {activeMap.nodes.find(n=>n.id===selId)?.parentId&&<>
+                <button onClick={()=>{const n=activeMap.nodes.find(x=>x.id===selId);if(n){setEditId(n.id);setEditText(n.text);setTimeout(()=>editInputRef.current?.select(),30);}}}
+                  style={{padding:'5px 11px',background:'var(--surface2)',color:'var(--text2)',border:'1px solid var(--border)',borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer'}}>✏️ 편집</button>
+                <button onClick={()=>deleteNode(selId)}
+                  style={{padding:'5px 11px',background:'#FEF2F2',color:'#DC2626',border:'1px solid #FCA5A5',borderRadius:8,fontSize:12,fontWeight:700,cursor:'pointer'}}>🗑 삭제</button>
+              </>}
+            </div>
+          )}
+        </div>
+
+        {/* 힌트 */}
+        <div style={{position:'absolute',bottom:12,right:12,zIndex:10,fontSize:11,color:'var(--muted)',background:'white',padding:'7px 12px',borderRadius:9,border:'1px solid var(--border)',lineHeight:1.8,boxShadow:'var(--shadow-sm)'}}>
+          클릭: 선택 · 더블클릭: 텍스트 편집<br/>드래그: 이동 · 빈 곳 드래그: 화면 이동
+        </div>
+
+        {/* SVG */}
+        <svg ref={svgRef} viewBox={`${pan.x} ${pan.y} ${W} ${H}`}
+          style={{width:'100%',height:'100%',touchAction:'none',display:'block'}}
+          onPointerDown={onSvgPD} onPointerMove={onSvgPM} onPointerUp={onSvgPU}>
+
+          <rect data-bg="1" x={pan.x} y={pan.y} width={W} height={H} fill="transparent"/>
+
+          {/* 연결선 */}
+          {activeMap.nodes.filter(n=>n.parentId).map(node=>{
+            const parent=activeMap.nodes.find(p=>p.id===node.parentId);
+            if(!parent)return null;
+            const color=getColor(node.depth);
+            return<path key={`e-${node.id}`} d={bezier(parent,node)} fill="none" stroke={color} strokeWidth="2.5" strokeOpacity=".4" style={{pointerEvents:'none'}}/>;
+          })}
+
+          {/* 노드 */}
+          {activeMap.nodes.map(node=>{
+            const color=getColor(node.depth);
+            const isRoot=!node.parentId;
+            const isSel=selId===node.id;
+            const isEdit=editId===node.id;
+            const label=node.text.length>18?node.text.slice(0,17)+'…':node.text;
+            const nw=isRoot?Math.max(140,label.length*9+28):Math.max(88,label.length*8+24);
+            const nh=isRoot?44:36;
+            return(
+              <g key={node.id} transform={`translate(${Math.round(node.x-nw/2)},${Math.round(node.y-nh/2)})`}
+                style={{cursor:'grab',userSelect:'none'}}
+                onPointerDown={e=>onNodePD(e,node.id)}
+                onPointerMove={e=>onNodePM(e,node.id)}
+                onPointerUp={e=>onNodePU(e,node.id)}
+                onDoubleClick={e=>{e.stopPropagation();setEditId(node.id);setEditText(node.text);setTimeout(()=>editInputRef.current?.select(),30);}}>
+                {/* 선택 글로우 */}
+                {isSel&&<rect x={-3} y={-3} width={nw+6} height={nh+6} rx={isRoot?16:11} fill={color} opacity=".12"/>}
+                {/* 배경 */}
+                <rect x={0} y={0} width={nw} height={nh} rx={isRoot?14:9}
+                  fill={isRoot?color:color+'18'}
+                  stroke={isRoot?'none':isSel?color:color+'55'}
+                  strokeWidth={1.5}/>
+                {/* 텍스트 or 인풋 */}
+                {isEdit
+                  ?<foreignObject x={5} y={(nh-24)/2} width={nw-10} height={24}>
+                    <input ref={editInputRef} value={editText} onChange={e=>setEditText(e.target.value)}
+                      onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();commitEdit();}if(e.key==='Escape')setEditId(null);}}
+                      onBlur={commitEdit}
+                      onClick={e=>e.stopPropagation()}
+                      style={{width:'100%',padding:'1px 2px',border:'none',background:'transparent',fontSize:isRoot?14:12,fontWeight:isRoot?800:700,color:isRoot?'white':color,outline:'none',fontFamily:'inherit',textAlign:'center',lineHeight:'22px'}}/>
+                  </foreignObject>
+                  :<text x={nw/2} y={nh/2} textAnchor="middle" dominantBaseline="central"
+                    style={{fontSize:isRoot?14:12,fontWeight:isRoot?800:700,fill:isRoot?'white':color,pointerEvents:'none',fontFamily:'Plus Jakarta Sans,sans-serif'}}>
+                    {label}
+                  </text>
+                }
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 /* ─── MEETING VIEW ─── */
 function MeetingView({roadmap}){
   const SKEY='quady-meetings-v1';
@@ -2283,6 +2528,7 @@ function QuadYRoadmap(){
     {k:"dashboard",l:"📊 대시보드"},
     {k:"kpi",l:"🎯 KPI 추적"},
     {k:"meetings",l:"📝 회의록"},
+    {k:"mindmap",l:"🧠 마인드맵"},
   ];
 
   return(
@@ -2333,12 +2579,13 @@ function QuadYRoadmap(){
         </div>
 
         {/* VIEWS */}
-        <div style={{flex:1,overflow:view==="meetings"?"hidden":"auto",display:"flex",flexDirection:"column"}}>
+        <div style={{flex:1,overflow:(view==="meetings"||view==="mindmap")?"hidden":"auto",display:"flex",flexDirection:"column"}}>
           {view==="timeline"&&<TimelineView roadmap={roadmap} zoom={zoom} onEditTask={setEditTask} onEditPhase={setEditPhase} onAddTask={addTask}/>}
           {view==="detail"&&<DetailView roadmap={roadmap} activePhase={activePhase} setActivePhase={setActivePhase} onEditTask={setEditTask} onEditPhase={setEditPhase} filterStatus={filterStatus} filterPriority={filterPriority} searchQuery={searchQuery} onAddTask={addTask} onOpenWorkspace={setWorkspaceTask} onReorderTask={reorderTask} onReorderPhase={reorderPhase}/>}
           {view==="dashboard"&&<DashboardView roadmap={roadmap} totalProg={totalProg} onEditTask={setEditTask} setView={setView} setActivePhase={setActivePhase} filterStatus={filterStatus}/>}
           {view==="kpi"&&<KPIView roadmap={roadmap} persist={persist}/>}
           {view==="meetings"&&<MeetingView roadmap={roadmap}/>}
+          {view==="mindmap"&&<MindMapView/>}
         </div>
       </div>
 

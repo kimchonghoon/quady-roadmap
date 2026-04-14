@@ -1513,7 +1513,23 @@ function MindMapView(){
   const onSvgPU=()=>{panRef.current=null;};
 
   const getColor=(d)=>PALETTE[d%PALETTE.length];
-  const bezier=(p,c)=>{const mx=(p.x+c.x)/2;return`M${p.x},${p.y}C${mx},${p.y} ${mx},${c.y} ${c.x},${c.y}`;};
+
+  // 노드 크기 계산 (렌더링과 동일한 공식)
+  const nw=(node)=>{
+    const len=Math.min(node.text.length,18);
+    return !node.parentId?Math.max(140,len*9+28):Math.max(88,len*8+24);
+  };
+  const nh=(node)=>!node.parentId?44:36;
+
+  // 박스 엣지에서 엣지로 연결되는 베지어 곡선
+  const bezier=(p,c)=>{
+    const pw=nw(p)/2, cw=nw(c)/2;
+    const goRight=c.x>=p.x;
+    const sx=p.x+(goRight?pw:-pw);
+    const ex=c.x+(goRight?-cw:cw);
+    const mx=(sx+ex)/2;
+    return`M${sx},${p.y}C${mx},${p.y} ${mx},${c.y} ${ex},${c.y}`;
+  };
 
   if(!activeMap)return null;
   const rootNode=activeMap.nodes[0];

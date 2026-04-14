@@ -2523,12 +2523,12 @@ function QuadYRoadmap(){
   if(!roadmap)return<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"var(--muted)",fontSize:16,fontWeight:500}}>로딩 중...</div>;
 
   const VIEWS=[
-    {k:"timeline",l:"📅 타임라인"},
-    {k:"detail",l:"📋 상세 보기"},
-    {k:"dashboard",l:"📊 대시보드"},
-    {k:"kpi",l:"🎯 KPI 추적"},
-    {k:"meetings",l:"📝 회의록"},
-    {k:"mindmap",l:"🧠 마인드맵"},
+    {k:"timeline", l:"타임라인", icon:"📅"},
+    {k:"detail",   l:"상세 보기", icon:"📋"},
+    {k:"dashboard",l:"대시보드", icon:"📊"},
+    {k:"kpi",      l:"KPI 추적", icon:"🎯"},
+    {k:"meetings", l:"회의록",   icon:"📝"},
+    {k:"mindmap",  l:"마인드맵", icon:"🧠"},
   ];
 
   return(
@@ -2542,11 +2542,11 @@ function QuadYRoadmap(){
         <div style={{background:"white",borderBottom:"1px solid var(--border)",flexShrink:0,boxShadow:"0 2px 8px rgba(13,20,36,.05)"}}>
           <div style={{padding:"0 12px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"nowrap",gap:4}}>
-              <div style={{display:"flex",alignItems:"center",gap:1,flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:0,flexShrink:0}}>
                 {VIEWS.map(v=>(
                   <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
-                    style={{padding:"11px 11px",background:view===v.k?"var(--surface3)":"none",border:"none",borderBottom:view===v.k?"2.5px solid var(--teal)":"2.5px solid transparent",borderRadius:"0",cursor:"pointer",fontSize:13,fontWeight:view===v.k?700:500,color:view===v.k?"var(--teal)":"var(--text2)",transition:"all .18s",whiteSpace:"nowrap"}}>
-                    {v.l}
+                    style={{padding:"10px 9px",background:view===v.k?"var(--surface3)":"none",border:"none",borderBottom:view===v.k?"2.5px solid var(--teal)":"2.5px solid transparent",cursor:"pointer",fontSize:12,fontWeight:view===v.k?700:500,color:view===v.k?"var(--teal)":"var(--text2)",transition:"all .18s",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
+                    <span style={{fontSize:13}}>{v.icon}</span>{v.l}
                   </button>
                 ))}
               </div>

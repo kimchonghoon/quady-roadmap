@@ -1,0 +1,19 @@
+# Claude 작업 디렉토리
+.claude/
+
+# 개발 중 생성된 임시/테스트 파일
+test-*.html
+demo-*.html
+app.html
+chat.html
+chat-component.js
+chat-standalone.html
+index-final.html
+index-simple-layout.html
+index-working.html
+index_new.html
+new-index.html
+quady_roadmap.jsx
+roadmap-with-chat.html
+AI_CHAT_GUIDE.md
+CHAT_CONNECTION_FIX.md

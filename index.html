@@ -37,7 +37,21 @@
   --shadow-xl:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
   --r:10px;--r-sm:6px;--r-lg:16px;--r-xl:20px;
 }
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;line-height:1.7}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100vh;
+  overflow:hidden;
+}
+#root{
+  width:100%;
+  height:100vh;
+  overflow:hidden;
+}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
@@ -67,10 +81,113 @@ button{font-family:inherit;cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);animation:fadeIn .15s ease}
 .modal-box{background:white;border-radius:var(--r-xl);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);animation:fadeIn .2s ease}
 .lbl{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+/* ===== AI CHAT SIDEBAR ===== */
+.chat-sidebar{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  background:white;
+  font-family:inherit;
+  border:none;
+}
+.chat-header{
+  padding:16px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(13,148,136,.1),rgba(37,99,235,.1));
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-shrink:0;
+}
+.chat-header-icon{font-size:22px}
+.chat-header-text{flex:1;min-width:0}
+.chat-header-title{font-size:14px;font-weight:700;margin:0;color:var(--text)}
+.chat-header-subtitle{font-size:12px;color:var(--muted);margin:3px 0 0}
+.chat-messages{
+  flex:1;
+  overflow-y:auto;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  background:#FAFBFC;
+}
+.chat-message{display:flex;margin-bottom:6px}
+.chat-message.user{justify-content:flex-end}
+.chat-bubble{
+  max-width:80%;
+  padding:11px 13px;
+  border-radius:11px;
+  font-size:13px;
+  line-height:1.5;
+  word-wrap:break-word;
+}
+.chat-message.user .chat-bubble{
+  background:var(--teal);
+  color:white;
+  border-radius:11px 11px 3px 11px;
+}
+.chat-message.assistant .chat-bubble{
+  background:white;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:11px 11px 11px 3px;
+}
+.chat-empty{
+  text-align:center;
+  color:var(--muted);
+  padding:24px 12px;
+  font-size:13px;
+  line-height:1.7;
+}
+.chat-input{
+  padding:12px;
+  border-top:1px solid var(--border);
+  display:flex;
+  gap:8px;
+  background:white;
+  flex-shrink:0;
+}
+.chat-input textarea{
+  flex:1;
+  resize:none;
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:8px 11px;
+  font-size:13px;
+  outline:none;
+  min-height:38px;
+  font-family:inherit;
+  background:white;
+  color:var(--text);
+}
+.chat-input textarea:focus{
+  border-color:var(--teal);
+}
+.chat-input button{
+  padding:8px 13px;
+  background:var(--teal);
+  color:white;
+  border-radius:7px;
+  font-weight:600;
+  font-size:12px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:all .15s;
+}
+.chat-input button:hover:not(:disabled){
+  background:var(--teal-dark);
+}
+.chat-input button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
 </style>
 </head>
 <body>
 <div id="root"></div>
+
 <script type="text/babel">
 const{useState,useEffect,useMemo,useCallback,useRef}=React;
 
@@ -513,7 +630,7 @@ function PhaseModal({phase,onSave,onDelete,onClose,isNew}){
 }
 
 /* ─── HEADER ─── */
-function Header({roadmap,totalProg,saving,onAddPhase,onOpenApiSettings}){
+function Header({roadmap,totalProg,saving,onAddPhase,onOpenApiSettings,onOpenAiChat}){
   const allTasks=roadmap.phases.flatMap(p=>p.tasks);
   const done=allTasks.filter(t=>t.status==="completed").length;
   const inprog=allTasks.filter(t=>t.status==="in-progress").length;
@@ -523,60 +640,86 @@ function Header({roadmap,totalProg,saving,onAddPhase,onOpenApiSettings}){
     {label:"진행 중",val:inprog,unit:"건",color:"#FDE68A"},
     {label:"완료",val:done,unit:"건",color:"#A7F3D0"},
   ];
+  const[goal,setGoal]=useState(()=>localStorage.getItem("quady-focus-goal")||"");
+  const[editingGoal,setEditingGoal]=useState(false);
+  const[goalDraft,setGoalDraft]=useState("");
+  const goalInputRef=useRef(null);
+
+  const startEditGoal=()=>{
+    setGoalDraft(goal);
+    setEditingGoal(true);
+    setTimeout(()=>goalInputRef.current?.focus(),50);
+  };
+  const saveGoal=()=>{
+    const v=goalDraft.trim();
+    setGoal(v);
+    localStorage.setItem("quady-focus-goal",v);
+    setEditingGoal(false);
+  };
+
   return(
-    <div style={{background:"linear-gradient(135deg,#0A0E27 0%,#0F2850 45%,#0D4A46 100%)",color:"white",padding:"36px 24px 28px",position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",top:-60,right:-60,width:300,height:300,borderRadius:"50%",background:"rgba(13,148,136,.08)",pointerEvents:"none"}}/>
-      <div style={{position:"absolute",bottom:-40,left:200,width:200,height:200,borderRadius:"50%",background:"rgba(37,99,235,.06)",pointerEvents:"none"}}/>
-      <div style={{maxWidth:1280,margin:"0 auto",position:"relative"}}>
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:12}}>
-          <div style={{display:"flex",alignItems:"center",gap:14}}>
-            <div style={{width:48,height:48,borderRadius:14,background:"linear-gradient(135deg,#0D9488,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,boxShadow:"0 4px 14px rgba(13,148,136,.4)"}}>Q</div>
-            <div>
-              <h1 style={{fontSize:26,fontWeight:800,letterSpacing:"-.02em",lineHeight:1.2}}>{roadmap.title}</h1>
-              <p style={{fontSize:14,opacity:.55,marginTop:4,letterSpacing:".01em"}}>{roadmap.subtitle}</p>
-            </div>
+    <div style={{background:"linear-gradient(135deg,#0A0E27 0%,#0F2850 50%,#0D4A46 100%)",color:"white",padding:"10px 20px",flexShrink:0}}>
+      {/* 1행: 로고 + 제목 + 버튼 + 업데이트 */}
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+        <div style={{width:34,height:34,borderRadius:10,background:"linear-gradient(135deg,#0D9488,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,flexShrink:0,boxShadow:"0 2px 8px rgba(13,148,136,.4)"}}>Q</div>
+        <div style={{flex:1,minWidth:0}}>
+          <h1 style={{fontSize:15,fontWeight:800,margin:0,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{roadmap.title}</h1>
+          <p style={{fontSize:11,opacity:.5,margin:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{roadmap.subtitle}</p>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+          <button onClick={()=>window.print()} style={{padding:"5px 10px",background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",borderRadius:6,fontSize:12,cursor:"pointer"}}>🖨️ 인쇄</button>
+          <button onClick={onOpenApiSettings} style={{padding:"5px 10px",background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",borderRadius:6,fontSize:12,cursor:"pointer"}}>🔑 AI 키</button>
+          <button onClick={onAddPhase} style={{padding:"5px 10px",background:"rgba(255,255,255,.1)",color:"white",border:"1px solid rgba(255,255,255,.2)",borderRadius:6,fontSize:12,cursor:"pointer"}}>+ Phase</button>
+        </div>
+        <div style={{fontSize:11,opacity:.35,flexShrink:0}}>업데이트: {roadmap.lastUpdated}{saving?" · 저장 중…":""}</div>
+      </div>
+
+      {/* 2행: 통계 + 진행률 */}
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+        {stats.map((s,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"baseline",gap:3,background:"rgba(255,255,255,.05)",borderRadius:7,padding:"4px 10px",border:"1px solid rgba(255,255,255,.07)"}}>
+            <span style={{fontSize:18,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</span>
+            <span style={{fontSize:10,opacity:.6}}>{s.unit}</span>
+            <span style={{fontSize:10,opacity:.45,marginLeft:2}}>{s.label}</span>
           </div>
-          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-            <button onClick={()=>window.print()} className="btn" style={{background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",fontSize:14}}>
-              🖨️ 인쇄
-            </button>
-            <button onClick={onOpenApiSettings} className="btn" style={{background:"rgba(255,255,255,.08)",color:"white",border:"1px solid rgba(255,255,255,.15)",fontSize:14}}>
-              🔑 AI API 키
-            </button>
-            <button onClick={onAddPhase} className="btn" style={{background:"rgba(255,255,255,.1)",color:"white",border:"1px solid rgba(255,255,255,.2)",fontSize:14}}>
-              + Phase 추가
-            </button>
-            <span style={{fontSize:15,opacity:.3}}>업데이트: {roadmap.lastUpdated}{saving?" · 저장 중…":""}</span>
-          </div>
-        </div>
-
-        <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"8px 14px",marginBottom:20,border:"1px solid rgba(255,255,255,.07)",fontSize:14,opacity:.75,fontStyle:"italic"}}>
-          🎯 {roadmap.vision}
-        </div>
-
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:22}}>
-          {stats.map((s,i)=>(
-            <div key={i} style={{background:"rgba(255,255,255,.05)",borderRadius:10,padding:"14px 16px",border:"1px solid rgba(255,255,255,.08)"}}>
-              <div style={{fontSize:15,opacity:.55,marginBottom:6}}>{s.label}</div>
-              <div style={{fontSize:28,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}<span style={{fontSize:15,fontWeight:500,opacity:.7,marginLeft:3}}>{s.unit}</span></div>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:15,opacity:.5,marginBottom:6}}>
+        ))}
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,opacity:.5,marginBottom:3}}>
             <span>전체 진행률</span>
-            <span style={{fontWeight:700,opacity:1,color:"#6EE7B7"}}>{totalProg * 10}% (평균 {totalProg}/10점)</span>
+            <span style={{fontWeight:700,opacity:1,color:"#6EE7B7"}}>{totalProg*10}%</span>
           </div>
-          <div style={{height:8,background:"rgba(255,255,255,.1)",borderRadius:4,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${totalProg*10}%`,background:"linear-gradient(90deg,#10B981,#34D399)",borderRadius:4,transition:"width .5s ease"}}/>
-          </div>
-          <div style={{display:"flex",marginTop:8,gap:2}}>
-            {roadmap.phases.map((ph,i)=>(
-              <div key={ph.id} title={ph.name} style={{flex:ph.endMonth-ph.startMonth+1,height:3,borderRadius:2,background:ph.color,opacity:.7}}/>
-            ))}
+          <div style={{height:5,background:"rgba(255,255,255,.1)",borderRadius:3,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${totalProg*10}%`,background:"linear-gradient(90deg,#10B981,#34D399)",borderRadius:3,transition:"width .5s ease"}}/>
           </div>
         </div>
+      </div>
+
+      {/* 3행: 시즌 집중 목표 */}
+      <div style={{borderTop:"1px solid rgba(255,255,255,.08)",paddingTop:8}}>
+        {editingGoal?(
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:13,opacity:.5,flexShrink:0}}>🎯</span>
+            <input ref={goalInputRef} value={goalDraft} onChange={e=>setGoalDraft(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter")saveGoal();if(e.key==="Escape")setEditingGoal(false);}}
+              placeholder="이번 시즌 집중 목표를 입력하세요..."
+              style={{flex:1,background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.3)",borderRadius:6,padding:"5px 10px",color:"white",fontSize:13,outline:"none",fontFamily:"inherit"}}
+            />
+            <button onClick={saveGoal} style={{padding:"4px 12px",background:"#0D9488",color:"white",border:"none",borderRadius:6,fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>저장</button>
+            <button onClick={()=>setEditingGoal(false)} style={{padding:"4px 8px",background:"rgba(255,255,255,.1)",color:"white",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",flexShrink:0}}>취소</button>
+          </div>
+        ):(
+          <div onClick={startEditGoal} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"4px 6px",borderRadius:6,transition:"background .15s"}}
+            onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.05)"}
+            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            <span style={{fontSize:13,flexShrink:0}}>🎯</span>
+            {goal?(
+              <span style={{fontSize:13,fontWeight:600,color:"#6EE7B7",letterSpacing:".01em",flex:1}}>{goal}</span>
+            ):(
+              <span style={{fontSize:12,opacity:.35,fontStyle:"italic",flex:1}}>클릭해서 이번 시즌 집중 목표를 입력하세요...</span>
+            )}
+            <span style={{fontSize:11,opacity:.3,flexShrink:0}}>✏️ 편집</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1082,6 +1225,172 @@ const DOC_TYPES=[
 ];
 
 /* ─── API SETTINGS MODAL ─── */
+/* ─── AI CHAT SIDEBAR ─── */
+function AIChatModal({roadmap,onClose}){
+  const[messages,setMessages]=useState([]);
+  const[input,setInput]=useState("");
+  const[loading,setLoading]=useState(false);
+  const[error,setError]=useState("");
+  const chatEndRef=useRef(null);
+
+  const scrollToBottom=()=>{
+    setTimeout(()=>chatEndRef.current?.scrollIntoView({behavior:"smooth"}),100);
+  };
+
+  useEffect(()=>scrollToBottom(),[messages]);
+
+  const sendMessage=async(userMsg)=>{
+    if(!userMsg.trim())return;
+    
+    const apiKey=localStorage.getItem("quady-api-key");
+    if(!apiKey){
+      setError("API 키를 먼저 설정해주세요. (상단 '🔑 AI API 키' 버튼)");
+      return;
+    }
+
+    const newMessages=[...messages,{role:"user",content:userMsg}];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+    setError("");
+
+    try{
+      const roadmapContext=`현재 로드맵 상태:
+${roadmap.phases.map(p=>{
+  const tasks=p.tasks||[];
+  const completed=tasks.filter(t=>t.status==="completed").length;
+  const avgProgress=tasks.length>0?Math.round(tasks.reduce((s,t)=>s+(t.progress||0),0)/tasks.length):0;
+  return `Phase: ${p.name} (${p.period})
+- 작업 ${completed}/${tasks.length} 완료 (진행률: ${avgProgress}%)
+- 담당자: ${[...new Set(tasks.map(t=>t.assignee).filter(Boolean))].join(', ')||'미배정'}
+- 마일스톤: ${p.milestone||'N/A'}`;
+}).join('\n\n')}`;
+
+      const systemPrompt=`당신은 QuadY 사업화 로드맵의 전문 AI 조언가입니다.
+
+현재 프로젝트 상태:
+${roadmapContext}
+
+역할:
+1. 프로젝트 진행 상황 분석 및 개선 제안
+2. 타임라인 현실성 평가
+3. 위험 요소 식별 및 해결책 제시
+4. 팀 역할 할당 적절성 평가
+5. 우선순위 최적화 제안
+
+간결하고 실행 가능한 조언을 제시하세요.`;
+
+      const response=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'x-api-key':apiKey,
+          'anthropic-version':'2023-06-01',
+          'content-type':'application/json',
+          'anthropic-dangerous-direct-browser-access':'true',
+        },
+        body:JSON.stringify({
+          model:'claude-3-haiku-20240307',
+          max_tokens:1024,
+          system:systemPrompt,
+          messages:newMessages.map(m=>({role:m.role,content:m.content})),
+        }),
+      });
+
+      if(!response.ok){
+        const err=await response.json();
+        throw new Error(err.error?.message||'채팅 요청 실패');
+      }
+
+      const data=await response.json();
+      const aiResponse=data.content[0].text;
+      setMessages(prev=>[...prev,{role:"assistant",content:aiResponse}]);
+    }catch(err){
+      console.error('AI Chat Error:',err);
+      setError(err.message||'오류가 발생했습니다. API 키를 확인해주세요.');
+      setMessages(newMessages.slice(0,-1));
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}} onClick={onClose}>
+      <div style={{background:"white",borderRadius:16,width:"100%",maxWidth:600,maxHeight:"90vh",display:"flex",flexDirection:"column",boxShadow:"0 25px 50px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
+        {/* Header */}
+        <div style={{padding:"18px 24px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(13,148,136,.08),rgba(37,99,235,.08))",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:24}}>🤖</span>
+            <div>
+              <h3 style={{margin:0,fontSize:16,fontWeight:700}}>AI 프로젝트 조언가</h3>
+              <p style={{margin:"2px 0 0",fontSize:12,color:"var(--muted)"}}>로드맵 최적화 및 위험 분석</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:24,cursor:"pointer",color:"var(--muted)"}}>×</button>
+        </div>
+
+        {/* Messages */}
+        <div style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:12,background:"#FAFBFC"}}>
+          {messages.length===0&&(
+            <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 20px",lineHeight:1.8}}>
+              <div style={{fontSize:40,marginBottom:12}}>💬</div>
+              <p style={{fontSize:15,marginBottom:16}}>로드맵에 대해 궁금한 점을 물어보세요!</p>
+              <p style={{fontSize:13,color:"var(--border)",marginBottom:20}}>예: "현재 타임라인이 현실적인가?", "리스크가 뭐가 있을까?", "우선순위는 적절한가?"</p>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {[
+                  "타임라인 현실성 평가",
+                  "위험 요소 분석",
+                  "우선순위 최적화",
+                  "팀 배치 제안",
+                ].map((q,i)=>(
+                  <button key={i} disabled={loading} onClick={()=>sendMessage(q)}
+                    style={{padding:"10px 12px",border:"1px solid var(--border)",borderRadius:8,background:"white",cursor:"pointer",fontSize:13,fontWeight:500,color:"var(--text2)",transition:"all .2s",opacity:loading?.5:1}}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.map((msg,i)=>(
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:msg.role==="user"?"flex-end":"flex-start"}}>
+              <div style={{maxWidth:"85%",padding:"12px 14px",borderRadius:msg.role==="user"?"12px 12px 4px 12px":"12px 12px 12px 4px",background:msg.role==="user"?"#0D9488":"white",color:msg.role==="user"?"white":"var(--text)",fontSize:14,lineHeight:1.6,whiteSpace:"pre-wrap",wordBreak:"break-word",border:msg.role==="assistant"?"1px solid var(--border)":"none",boxShadow:msg.role==="user"?"0 2px 6px rgba(13,148,136,.2)":"none"}}>
+                {msg.content}
+              </div>
+            </div>
+          ))}
+          {loading&&(
+            <div style={{display:"flex",alignItems:"flex-start"}}>
+              <div style={{padding:"12px 14px",borderRadius:"12px 12px 12px 4px",background:"white",border:"1px solid var(--border)",fontSize:14,color:"var(--muted)",fontStyle:"italic"}}>
+                ⏳ AI가 생각 중입니다...
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef}/>
+        </div>
+
+        {error&&(
+          <div style={{padding:"12px 16px",background:"#FEE2E2",borderBottom:"1px solid var(--border)",color:"#991B1B",fontSize:13,fontWeight:500}}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Input */}
+        <div style={{padding:"12px 16px",borderTop:"1px solid var(--border)",display:"flex",gap:8,flexShrink:0,background:"white"}}>
+          <textarea value={input} onChange={e=>setInput(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage(input);}}}
+            placeholder="질문 입력... (Enter 전송)"
+            style={{flex:1,resize:"none",border:"1px solid var(--border)",borderRadius:8,padding:"8px 10px",fontSize:13,outline:"none",minHeight:40,fontFamily:"inherit",lineHeight:1.5}}
+          />
+          <button onClick={()=>sendMessage(input)} disabled={loading||!input.trim()}
+            style={{padding:"8px 16px",background:"var(--teal)",color:"white",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:600,flexShrink:0,opacity:(loading||!input.trim())?.5:1,transition:"opacity .2s"}}>
+            전송
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function APISettingsModal({onClose}){
   const[key,setKey]=useState(localStorage.getItem("quady-api-key")||"");
   const save=()=>{localStorage.setItem("quady-api-key",key.trim());onClose();};
@@ -1174,7 +1483,7 @@ KPI: ${task.kpi||"미설정"}
       const res=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},
-        body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1024,system:sys,messages:newMsgs}),
+        body:JSON.stringify({model:"claude-3-haiku-20240307",max_tokens:1024,system:sys,messages:newMsgs}),
       });
       if(!res.ok){const e=await res.json();throw new Error(e.error?.message||res.statusText);}
       const data=await res.json();
@@ -1297,6 +1606,224 @@ KPI: ${task.kpi||"미설정"}
   );
 }
 
+/* ─── AI 채팅 사이드바 (항상 표시 + 직접 실행) ─── */
+function AIChatSidebar({roadmap,persist}){
+  const[messages,setMessages]=useState([]);
+  const[input,setInput]=useState("");
+  const[loading,setLoading]=useState(false);
+  const[error,setError]=useState("");
+  const[pending,setPending]=useState(null); // {commands, descriptions}
+  const chatEndRef=useRef(null);
+
+  useEffect(()=>{
+    setTimeout(()=>chatEndRef.current?.scrollIntoView({behavior:"smooth"}),100);
+  },[messages]);
+
+  // AI 응답에서 <CMD>...</CMD> 명령 블록 추출
+  const parseResponse=(text)=>{
+    const match=text.match(/<CMD>([\s\S]*?)<\/CMD>/i);
+    if(!match)return{cleanText:text,commands:[]};
+    try{
+      const cmdStr=match[1].trim();
+      const commands=JSON.parse(cmdStr.startsWith('[')?cmdStr:`[${cmdStr}]`);
+      const cleanText=text.replace(/<CMD>[\s\S]*?<\/CMD>/gi,'').trim();
+      return{cleanText,commands};
+    }catch{return{cleanText:text,commands:[]};}
+  };
+
+  // 명령을 사람이 읽기 쉬운 설명으로 변환
+  const describeCmd=(cmd)=>{
+    const phase=roadmap?.phases?.find(p=>p.id===cmd.phaseId);
+    const task=phase?.tasks?.find(t=>t.id===cmd.taskId);
+    const statusLabel={'not-started':'시작 전','in-progress':'진행 중','completed':'완료','blocked':'보류'};
+    const fieldLabel={status:'상태',progress:'진행률',assignee:'담당자',priority:'우선순위',title:'제목'};
+    if(cmd.action==='update_task'){
+      const val=cmd.field==='status'?(statusLabel[cmd.value]||cmd.value):cmd.field==='progress'?`${cmd.value}%`:cmd.value;
+      return `📝 "${task?.title||cmd.taskId}" ${fieldLabel[cmd.field]||cmd.field} → ${val}`;
+    }
+    if(cmd.action==='add_task'){
+      return `➕ [${phase?.name||cmd.phaseId}] 새 작업: "${cmd.title}"${cmd.assignee?` (담당: ${cmd.assignee})`:''}`;
+    }
+    if(cmd.action==='update_phase'){
+      return `📋 [${phase?.name||cmd.phaseId}] ${fieldLabel[cmd.field]||cmd.field} → ${cmd.value}`;
+    }
+    return JSON.stringify(cmd);
+  };
+
+  // 명령 실행하여 로드맵 반영
+  const applyCommands=(commands)=>{
+    if(!roadmap||!persist)return;
+    let updated=JSON.parse(JSON.stringify(roadmap));
+    for(const cmd of commands){
+      if(cmd.action==='update_task'){
+        updated.phases=updated.phases.map(p=>p.id===cmd.phaseId?{...p,tasks:p.tasks.map(t=>t.id===cmd.taskId?{...t,[cmd.field]:cmd.value}:t)}:p);
+      }else if(cmd.action==='add_task'){
+        updated.phases=updated.phases.map(p=>p.id===cmd.phaseId?{...p,tasks:[...p.tasks,{
+          id:`t-${Date.now()}-${Math.random().toString(36).substr(2,4)}`,
+          title:cmd.title,status:cmd.status||'not-started',progress:cmd.progress||0,
+          priority:cmd.priority||'medium',assignee:cmd.assignee||'',
+          startMonth:cmd.startMonth||1,endMonth:cmd.endMonth||2,
+          deadline:'',kpi:'',details:[],checklist:[],comments:[],deps:[]
+        }]}:p);
+      }else if(cmd.action==='update_phase'){
+        updated.phases=updated.phases.map(p=>p.id===cmd.phaseId?{...p,[cmd.field]:cmd.value}:p);
+      }
+    }
+    persist(updated);
+    setPending(null);
+    setMessages(prev=>[...prev,{role:'system',content:`✅ ${commands.length}개 항목이 로드맵에 반영되었습니다.`}]);
+  };
+
+  const sendMessage=async(userMsg)=>{
+    const msg=(userMsg||input).trim();
+    if(!msg||loading)return;
+    const apiKey=localStorage.getItem("quady-api-key");
+    if(!apiKey){setError("상단 '🔑 AI API 키'에서 API 키를 먼저 설정해주세요.");return;}
+    const newMsgs=[...messages.filter(m=>m.role!=='system'),{role:"user",content:msg}];
+    setMessages(prev=>[...prev,{role:"user",content:msg}]);
+    setInput("");
+    setLoading(true);
+    setError("");
+    setPending(null);
+    try{
+      // 로드맵 전체 구조(ID 포함) 시스템 프롬프트에 전달
+      const ctx=roadmap?roadmap.phases.map(p=>{
+        const tasks=p.tasks||[];
+        return `[Phase ID: ${p.id}] ${p.name} (${p.period||''})\n`+
+          tasks.map(t=>`  - [Task ID: ${t.id}] ${t.title} | 상태: ${t.status} | 진행률: ${t.progress}% | 담당: ${t.assignee||'미배정'}`).join('\n');
+      }).join('\n\n'):'로드맵 없음';
+
+      const systemPrompt=`당신은 QuadY 사업화 로드맵 AI 조언가입니다. 분석/조언 뿐 아니라 사용자 요청 시 로드맵을 직접 수정할 수 있습니다.
+
+현재 로드맵:
+${ctx}
+
+=== 로드맵 수정 요청 시 응답 형식 ===
+텍스트 답변 후 아래 형식으로 명령을 추가하세요:
+
+<CMD>
+[
+  {"action":"update_task","phaseId":"실제ID","taskId":"실제ID","field":"status","value":"completed"},
+  {"action":"update_task","phaseId":"실제ID","taskId":"실제ID","field":"progress","value":80},
+  {"action":"add_task","phaseId":"실제ID","title":"작업명","assignee":"담당자","startMonth":1,"endMonth":2,"priority":"high"},
+  {"action":"update_phase","phaseId":"실제ID","field":"milestone","value":"새 마일스톤"}
+]
+</CMD>
+
+가능한 field 값: status(not-started/in-progress/completed/blocked), progress(0~100), assignee(이름), priority(high/medium/low), title
+수정 요청이 아닌 일반 질문은 CMD 블록 없이 텍스트만 답변하세요.`;
+
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':apiKey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({
+          model:'claude-3-haiku-20240307',
+          max_tokens:1500,
+          system:systemPrompt,
+          messages:newMsgs.map(m=>({role:m.role,content:m.content})),
+        }),
+      });
+      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'요청 실패');}
+      const data=await res.json();
+      const rawText=data.content[0].text;
+      const{cleanText,commands}=parseResponse(rawText);
+      setMessages(prev=>[...prev,{role:"assistant",content:cleanText}]);
+      if(commands.length>0){
+        setPending({commands,descriptions:commands.map(describeCmd)});
+      }
+    }catch(err){
+      setError(err.message||'오류가 발생했습니다.');
+    }finally{setLoading(false);}
+  };
+
+  return(
+    <div style={{width:340,flexShrink:0,display:"flex",flexDirection:"column",height:"100vh",background:"white",borderLeft:"2px solid var(--border)",overflow:"hidden"}}>
+      {/* 헤더 */}
+      <div style={{padding:"14px 16px",background:"linear-gradient(135deg,rgba(13,148,136,.1),rgba(37,99,235,.1))",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+        <span style={{fontSize:22}}>🤖</span>
+        <div style={{flex:1}}>
+          <p style={{margin:0,fontSize:14,fontWeight:700,color:"var(--text)"}}>AI 조언가</p>
+          <p style={{margin:"2px 0 0",fontSize:11,color:"var(--muted)"}}>분석 · 조언 · 직접 실행</p>
+        </div>
+        {messages.length>0&&<button onClick={()=>{setMessages([]);setPending(null);}} style={{background:"none",border:"none",fontSize:12,color:"var(--muted)",cursor:"pointer",padding:"2px 6px",borderRadius:4}}>초기화</button>}
+      </div>
+
+      {/* 메시지 영역 */}
+      <div style={{flex:1,overflowY:"auto",padding:"14px 12px",display:"flex",flexDirection:"column",gap:10,background:"#FAFBFC"}}>
+        {messages.length===0&&(
+          <div style={{textAlign:"center",color:"var(--muted)",padding:"24px 12px",lineHeight:1.8}}>
+            <div style={{fontSize:32,marginBottom:8}}>🤖</div>
+            <p style={{fontSize:13,fontWeight:600,color:"var(--text)",marginBottom:4}}>AI 조언가</p>
+            <p style={{fontSize:12,marginBottom:16}}>질문하거나 작업을 시켜보세요!</p>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {[
+                {label:"📊 타임라인 현실성 평가",q:"타임라인 현실성 평가"},
+                {label:"⚠️ 위험 요소 분석",q:"위험 요소 분석"},
+                {label:"✅ 완료된 작업 표시",q:"완료된 작업들을 완료 상태로 바꿔줘"},
+                {label:"➕ 작업 추가 제안",q:"현재 로드맵에 부족한 작업을 추가해줘"},
+              ].map((item,i)=>(
+                <button key={i} onClick={()=>sendMessage(item.q)} disabled={loading}
+                  style={{padding:"8px 10px",border:"1px solid var(--border)",borderRadius:8,background:"white",cursor:"pointer",fontSize:12,fontWeight:500,color:"var(--text2)",textAlign:"left"}}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {messages.map((m,i)=>(
+          <div key={i} style={{display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":m.role==="system"?"center":"flex-start"}}>
+            {m.role==="system"?(
+              <div style={{padding:"6px 12px",background:"#D1FAE5",borderRadius:20,fontSize:12,color:"#065F46",fontWeight:600}}>{m.content}</div>
+            ):(
+              <div style={{maxWidth:"88%",padding:"10px 12px",borderRadius:m.role==="user"?"12px 12px 3px 12px":"12px 12px 12px 3px",background:m.role==="user"?"#0D9488":"white",color:m.role==="user"?"white":"var(--text)",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap",wordBreak:"break-word",border:m.role==="assistant"?"1px solid var(--border)":"none",boxShadow:m.role==="user"?"0 2px 6px rgba(13,148,136,.2)":"none"}}>
+                {m.content}
+              </div>
+            )}
+          </div>
+        ))}
+        {loading&&<div style={{display:"flex",alignItems:"flex-start"}}><div style={{padding:"10px 12px",borderRadius:"12px 12px 12px 3px",background:"white",border:"1px solid var(--border)",fontSize:13,color:"var(--muted)",fontStyle:"italic"}}>⏳ 생각 중...</div></div>}
+        {error&&<div style={{padding:"10px 12px",background:"#FEE2E2",borderRadius:8,color:"#991B1B",fontSize:12}}>{error}</div>}
+
+        {/* 실행 대기 명령 확인 카드 */}
+        {pending&&(
+          <div style={{background:"white",border:"2px solid #0D9488",borderRadius:10,padding:"12px",boxShadow:"0 4px 12px rgba(13,148,136,.15)"}}>
+            <p style={{margin:"0 0 8px",fontSize:12,fontWeight:700,color:"#0D9488"}}>🔧 로드맵 변경 준비됨</p>
+            <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:10}}>
+              {pending.descriptions.map((d,i)=>(
+                <p key={i} style={{margin:0,fontSize:12,color:"var(--text2)",lineHeight:1.5}}>{d}</p>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>applyCommands(pending.commands)}
+                style={{flex:1,padding:"7px",background:"#0D9488",color:"white",border:"none",borderRadius:7,cursor:"pointer",fontSize:12,fontWeight:700}}>
+                ✅ 로드맵에 적용
+              </button>
+              <button onClick={()=>setPending(null)}
+                style={{padding:"7px 10px",background:"var(--surface2)",color:"var(--text2)",border:"1px solid var(--border)",borderRadius:7,cursor:"pointer",fontSize:12}}>
+                취소
+              </button>
+            </div>
+          </div>
+        )}
+        <div ref={chatEndRef}/>
+      </div>
+
+      {/* 입력 영역 */}
+      <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:6,flexShrink:0,background:"white"}}>
+        <textarea value={input} onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}}
+          placeholder="질문하거나 작업 지시... (Enter 전송)"
+          style={{flex:1,resize:"none",border:"1px solid var(--border)",borderRadius:8,padding:"8px 10px",fontSize:13,outline:"none",minHeight:38,maxHeight:80,fontFamily:"inherit",lineHeight:1.5}}
+        />
+        <button onClick={()=>sendMessage()} disabled={loading||!input.trim()}
+          style={{padding:"8px 14px",background:"var(--teal)",color:"white",border:"none",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:600,flexShrink:0,opacity:(loading||!input.trim())?.5:1,alignSelf:"flex-end"}}>
+          전송
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── MAIN APP ─── */
 function QuadYRoadmap(){
   const[roadmap,setRoadmap]=useState(null);
@@ -1312,6 +1839,7 @@ function QuadYRoadmap(){
   const[searchQuery,setSearchQuery]=useState("");
   const[workspaceTask,setWorkspaceTask]=useState(null);
   const[showApiSettings,setShowApiSettings]=useState(false);
+  const[showAiChat,setShowAiChat]=useState(false);
 
   useEffect(()=>{
     try{
@@ -1391,54 +1919,63 @@ function QuadYRoadmap(){
   ];
 
   return(
-    <div style={{minHeight:"100vh",background:"var(--bg)"}}>
-      <Header roadmap={roadmap} totalProg={totalProg} saving={saving} onAddPhase={()=>setNewPhase(true)} onOpenApiSettings={()=>setShowApiSettings(true)}/>
+    <div style={{height:"100vh",width:"100%",display:"flex",flexDirection:"row",overflow:"hidden"}}>
 
-      {/* NAV */}
-      <div style={{background:"white",borderBottom:"1px solid var(--border)",position:"sticky",top:0,zIndex:50,boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
-        <div style={{maxWidth:1280,margin:"0 auto",padding:"0 24px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,paddingTop:4}}>
-            <div style={{display:"flex",alignItems:"center",gap:2}}>
-              {VIEWS.map(v=>(
-                <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
-                  style={{padding:"14px 20px",background:"none",border:"none",borderBottom:view===v.k?"3px solid var(--teal)":"3px solid transparent",cursor:"pointer",fontSize:15,fontWeight:view===v.k?700:400,color:view===v.k?"var(--teal)":"var(--muted)",transition:"all .15s",whiteSpace:"nowrap"}}>
-                  {v.l}
-                </button>
-              ))}
-              {view==="timeline"&&(
-                <div style={{display:"flex",alignItems:"center",gap:2,marginLeft:12,background:"var(--surface2)",borderRadius:8,padding:3}}>
-                  {Object.entries(ZOOMS).map(([k,c])=>(
-                    <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 11px",border:"none",borderRadius:6,cursor:"pointer",fontSize:15,fontWeight:600,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .15s"}}>
-                      {c.label}
-                    </button>
-                  ))}
+      {/* ─── LEFT: 메인 로드맵 영역 ─── */}
+      <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",overflow:"hidden",background:"var(--bg)"}}>
+        <Header roadmap={roadmap} totalProg={totalProg} saving={saving} onAddPhase={()=>setNewPhase(true)} onOpenApiSettings={()=>setShowApiSettings(true)} onOpenAiChat={()=>setShowAiChat(true)}/>
+
+        {/* NAV */}
+        <div style={{background:"white",borderBottom:"1px solid var(--border)",flexShrink:0,boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+          <div style={{maxWidth:1280,margin:"0 auto",padding:"0 24px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,paddingTop:4}}>
+              <div style={{display:"flex",alignItems:"center",gap:2}}>
+                {VIEWS.map(v=>(
+                  <button key={v.k} onClick={()=>{setView(v.k);if(v.k==="detail"&&!activePhase&&roadmap.phases.length)setActivePhase(roadmap.phases[0].id);}}
+                    style={{padding:"14px 20px",background:"none",border:"none",borderBottom:view===v.k?"3px solid var(--teal)":"3px solid transparent",cursor:"pointer",fontSize:15,fontWeight:view===v.k?700:400,color:view===v.k?"var(--teal)":"var(--muted)",transition:"all .15s",whiteSpace:"nowrap"}}>
+                    {v.l}
+                  </button>
+                ))}
+                {view==="timeline"&&(
+                  <div style={{display:"flex",alignItems:"center",gap:2,marginLeft:12,background:"var(--surface2)",borderRadius:8,padding:3}}>
+                    {Object.entries(ZOOMS).map(([k,c])=>(
+                      <button key={k} onClick={()=>setZoom(k)} style={{padding:"4px 11px",border:"none",borderRadius:6,cursor:"pointer",fontSize:15,fontWeight:600,background:zoom===k?"white":"transparent",color:zoom===k?"var(--teal)":"var(--muted)",boxShadow:zoom===k?"var(--shadow-sm)":"none",transition:"all .15s"}}>
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {(view==="detail"||view==="dashboard")&&(
+                <div style={{display:"flex",alignItems:"center",gap:8,paddingBottom:4}}>
+                  <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:160,fontSize:14,padding:"5px 10px"}}/>
+                  <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
+                    <option value="all">상태: 모두</option>
+                    {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                  <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
+                    <option value="all">우선순위: 모두</option>
+                    {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                  </select>
                 </div>
               )}
             </div>
-            {(view==="detail"||view==="dashboard")&&(
-              <div style={{display:"flex",alignItems:"center",gap:8,paddingBottom:4}}>
-                <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="검색..." className="inp" style={{maxWidth:160,fontSize:14,padding:"5px 10px"}}/>
-                <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
-                  <option value="all">상태: 모두</option>
-                  {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                </select>
-                <select value={filterPriority} onChange={e=>setFilterPriority(e.target.value)} className="inp" style={{maxWidth:130,fontSize:14,padding:"5px 10px"}}>
-                  <option value="all">우선순위: 모두</option>
-                  {Object.entries(PRIORITY).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
-                </select>
-              </div>
-            )}
           </div>
+        </div>
+
+        {/* VIEWS */}
+        <div style={{flex:1,overflow:"auto"}}>
+          {view==="timeline"&&<TimelineView roadmap={roadmap} zoom={zoom} onEditTask={setEditTask} onEditPhase={setEditPhase} onAddTask={addTask}/>}
+          {view==="detail"&&<DetailView roadmap={roadmap} activePhase={activePhase} setActivePhase={setActivePhase} onEditTask={setEditTask} onEditPhase={setEditPhase} filterStatus={filterStatus} filterPriority={filterPriority} searchQuery={searchQuery} onAddTask={addTask} onOpenWorkspace={setWorkspaceTask} onReorderTask={reorderTask} onReorderPhase={reorderPhase}/>}
+          {view==="dashboard"&&<DashboardView roadmap={roadmap} totalProg={totalProg} onEditTask={setEditTask} setView={setView} setActivePhase={setActivePhase} filterStatus={filterStatus}/>}
+          {view==="kpi"&&<KPIView roadmap={roadmap}/>}
         </div>
       </div>
 
-      {/* VIEWS */}
-      {view==="timeline"&&<TimelineView roadmap={roadmap} zoom={zoom} onEditTask={setEditTask} onEditPhase={setEditPhase} onAddTask={addTask}/>}
-      {view==="detail"&&<DetailView roadmap={roadmap} activePhase={activePhase} setActivePhase={setActivePhase} onEditTask={setEditTask} onEditPhase={setEditPhase} filterStatus={filterStatus} filterPriority={filterPriority} searchQuery={searchQuery} onAddTask={addTask} onOpenWorkspace={setWorkspaceTask} onReorderTask={reorderTask} onReorderPhase={reorderPhase}/>}
-      {view==="dashboard"&&<DashboardView roadmap={roadmap} totalProg={totalProg} onEditTask={setEditTask} setView={setView} setActivePhase={setActivePhase} filterStatus={filterStatus}/>}
-      {view==="kpi"&&<KPIView roadmap={roadmap}/>}
+      {/* ─── RIGHT: AI 채팅 사이드바 (항상 표시) ─── */}
+      <AIChatSidebar roadmap={roadmap} persist={persist}/>
 
-      {/* MODALS */}
+      {/* MODALS (position:fixed → 레이아웃 무관하게 최상위 렌더링) */}
       {editTask&&<TaskModal task={editTask.task} phase={editTask.phase} phases={roadmap.phases} onSave={saveTask} onMove={moveTask} onDelete={deleteTask} onClose={()=>setEditTask(null)}/>}
       {editPhase&&<PhaseModal phase={editPhase} onSave={savePhase} onDelete={deletePhase} onClose={()=>setEditPhase(null)}/>}
       {newPhase&&<PhaseModal isNew onSave={savePhase} onDelete={()=>{}} onClose={()=>setNewPhase(false)}/>}
@@ -1448,8 +1985,12 @@ function QuadYRoadmap(){
   );
 }
 
-const root=ReactDOM.createRoot(document.getElementById("root"));
-root.render(<QuadYRoadmap/>);
+// ===== REACT 렌더링 =====
+const rootEl=document.getElementById("root");
+if(rootEl){
+  const root=ReactDOM.createRoot(rootEl);
+  root.render(<QuadYRoadmap/>);
+}
   </script>
 </body>
 </html>
